@@ -4,6 +4,6 @@ This repository provides code and instructions for running the Face-to-Face Comp
 ## Installation
 ### Pydub and SimpleAudio
 
-## Set-Up in the lab
+## Configuration in the lab
 ### Hardwear
 ### Calibrating Sound
