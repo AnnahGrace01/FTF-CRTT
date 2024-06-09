@@ -1,14 +1,29 @@
 # FTF-CRTT
-This repository provides code and instructions for running the Face-to-Face Competetive Reaction Time Task (FTF-CRTT) first described in our academic article[add hyperlink]. Please cite this paper in any publications including our code or design. Unlike the classical CRTT, ours is designed to be run with two people. There are simpler versions of the CRTT available elsewhere designed to be run with just a single person (and a fake "opponent"), which are likey a better option if you wish to run an individual CRTT study. For example, available [here](https://www.millisecond.com/download/library/competitivereactiontime). 
+This repository provides code and instructions for running the Face-to-Face Competetive Reaction Time Task (FTF-CRTT) first described in our academic article[add hyperlink]. Please cite this paper in any publications including our code or design. Unlike the classical CRTT, ours is designed to be run with two participants. There are simpler versions of the CRTT available elsewhere designed to be run with just a single person (and a fake "opponent"), which are likey a better option if you wish to run an individual CRTT study. For example, available [here](https://www.millisecond.com/download/library/competitivereactiontime). Our code allows the winner of each round to send a "sound blast" to the loser.
+
+## Executable
+We have provided an executable version of our experiment using [PyInstaller](https://github.com/pyinstaller). You can use this to view our experiment without interfacing with Python. This executable will also allow you to replicate our study. If you want to customize our code to extend our research, you will need to modify our script in python. Instructions to get started are below.
 
 ## Installation
+The code is only compatible with Windows. I wrote it in Python3 on Windows 11. I do not know if it is compatible with other versions of Python or Windows.
+
 ### Pydub and SimpleAudio
+The code requires you to install [Pydub](https://github.com/jiaaro/pydub) and [SimpleAudio](https://github.com/hamiltron/py-simple-audio). They can be difficult to get working, but with enough trial and error, it will work. You may have to import SimpleAudio into your working directory manually.
+
 ### Our audio file
+The audio file we used for blasts is available in this repository (radio_static.mp3). If you plan to run our code through python, you will need to update the audio_file_path to point to the audio file on your computer.
 
 ## Configuration in the lab
-### Hardwear
+Our lab is split into two rooms: the control room (where our computer running the program is) and the experimentation room (where the participants play the CRTT), as illustrated [here](https://github.com/AnnahGrace01/FTF-CRTT/blob/main/Arrangment%20of%20participants.pdf). Put simply, our code runs off of one computer and is displayed to both participants on two monitors simultaneously. Both participants see the same thing, and we leverage audio channels to send sound to only one participant at a time (expanded on bellow).
+
+### Hardware
+Our hardware consists of one computer running the code, an AUX. splitter, an HDMI splitter, a USB hub, two monitors, two keyboards, two pairs of headphones, and two big red buttons, as illustrated [here](https://github.com/AnnahGrace01/FTF-CRTT/blob/main/Hardware%20Diagram.pdf). The big red buttons emulate the "1" or "2" key ("1" for Player 1, etc.). Player 1's headphones are attached to the right audio channel, and Player 2 gets the left audio channel. **NOTE.** Our code needs to play audio on only one channel at a time. Your Windows computer may try to "make up for" the single-channel audio by mirroring it to the other channel. If this happens (audio comes out of both headphones), you will need to find the setting that controls this and disable it. It may be called "audio enhancements".
+
 ### Calibrating sound
+It is important that you know the volume levels coming out of your experiment at each blast level. The precise volume output will entirely depend on your experimental set up, cable length, etc. This means that you need to calibrate the audio to you exact set up. You can do this by editing the volume modifiers in lines 92 to 99 of the main script. You may have difficulty reaching an output of 110 dBs. This is why we use in-line amplifiers. Note that every time you run the experiment, you will need to have your computer audio set to the same volume (probably 100%).
+
 ### Our camera
+We recorded participants during the game. To do this, we used an [Insta360 ONE X2](https://www.insta360.com/product/insta360-onex2) placed in between participants. We synced the video to our experiment offline in the original study. We have since improved to code to start and stop recording over wifi, and sync the time more precisely. We will include this code once we are ready to publish it in this repository, along with a version without camera integration for those not using the Insta360 ONE X2. If you are looking for a good 360 camera for dyadic research, we have had success with Insta360. You should note, however, that their support for Python integration is almost non-existent.
 
 ## Extention, Customization, Standardization, and Analysis
 We would love for you to modify our code and produce cool research. If you publish research with a modified version of our code and you are willing to share your modifications, please create a fork for the project and then make a pull request.
