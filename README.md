@@ -11,7 +11,7 @@ This repository provides code and instructions for running the Face-to-Face Comp
 ### Our camera
 
 ## Extention, Customization, Standardization, and Analysis
-We would love for you to modify our code and produce cool research. If you publish research with a modified version of our code and you are willing to share your modifications, please get in touch so we can either add your code to this repository or add a link to your own repository.
+We would love for you to modify our code and produce cool research. If you publish research with a modified version of our code and you are willing to share your modifications, please create a fork for the project and then make a pull request.
 
 ### Standardization of the CRTT
 Before you design and employ a modification to the CRTT, you should know that there is a lot of debate in the field about standardization. We designed our FTF-CRTT with [Elson et al.'s (2014)](https://doi.org/10.1037/a0035569) recommendations in mind (available for free [here](https://www.researchgate.net/publication/259845770_Press_CRTT_to_Measure_Aggressive_Behavior_The_Unstandardized_Use_of_the_Competitive_Reaction_Time_Task_in_Aggression_Research)). Specifically, we use volume as a measure of aggression only, we did not include duration. As recommended, our blast level input scale is a range from 1-8, we did not include a 0 aggression response. Blast level 1 is 75dB, and each level is 5dB higher than the last (such that 8=110 dB). If you wish, you can change all of this by customizing our provided code.
