@@ -1,5 +1,5 @@
 # FTF-CRTT
-This repository provides code and instructions for running the Face-to-Face Competetive Reaction Time Task (FTF-CRTT) first described in our academic article[add hyperlink]. Please cite this paper in any publications including our code or design. Unlike the classical CRTT, ours is designed to be run with two people. There are simpler versions of the CRTT available elsewhere designed to be run with just a single person (and a fake "opponent"), which are likey a better option if you wish to run an individual CRTT study. For example, available here: https://www.millisecond.com/download/library/competitivereactiontime 
+This repository provides code and instructions for running the Face-to-Face Competetive Reaction Time Task (FTF-CRTT) first described in our academic article[add hyperlink]. Please cite this paper in any publications including our code or design. Unlike the classical CRTT, ours is designed to be run with two people. There are simpler versions of the CRTT available elsewhere designed to be run with just a single person (and a fake "opponent"), which are likey a better option if you wish to run an individual CRTT study. For example, available [here](https://www.millisecond.com/download/library/competitivereactiontime). 
 
 ## Installation
 ### Pydub and SimpleAudio
