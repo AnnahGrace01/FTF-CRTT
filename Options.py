@@ -580,6 +580,8 @@ def end_game():
         for row in save_files:
             datawriter.writerow(row)
 
+    print(f"Saving file to: C:/Users/am650/Desktop/Active_Experiment/CRTT/{FILE_NAME}_{GAME}_{CONDITION}.csv")
+
 ### Start Program ##############################################################
 # Run calls to set the script running
 ################################################################################
