@@ -1,0 +1,41 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: FTF-CRTT
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Annah
+    family-names: McCurry
+    name-particle: G
+    email: am650@st-andrews.ac.uk
+    affiliation: University of St Andrews
+    orcid: 'https://orcid.org/0000-0003-3403-7680'
+  - given-names: David
+    name-particle: I
+    family-names: Donaldson
+    email: did1@st-andrews.ac.uk
+    affiliation: University of St Andrews
+    orcid: 'https://orcid.org/0000-0002-8036-3455'
+  - given-names: Robert
+    name-particle: C
+    family-names: May
+    email: bobby.may@st-andrews.ac.uk
+    affiliation: University of St Andrews
+    orcid: 'https://orcid.org/0000-0001-8110-8408'
+abstract: >-
+  This repository provides code and instructions for running
+  the Face-to-Face Competetive Reaction Time Task (FTF-CRTT)
+  first described in our academic article[add hyperlink].
+  Please cite this paper in any publications including our
+  code or design. Unlike the classical CRTT, ours is
+  designed to be run with two participants. There are
+  simpler versions of the CRTT available elsewhere designed
+  to be run with just a single person (and a fake
+  "opponent"), which are likey a better option if you wish
+  to run an individual CRTT study. Our code allows the
+  winner of each round to send a "sound blast" to the loser.
+license: MIT
