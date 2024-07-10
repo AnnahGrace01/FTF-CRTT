@@ -40,7 +40,7 @@ BG_COLOUR = "black"
 
 # Provide pathname for audio file
 blast_file = AudioSegment.from_mp3(
-    "C:/Users/am650/Desktop/Active_Experiment/CRTT/radio_static.mp3"
+    "radio_static.mp3"
 )
 
 FILE_NAME = datetime.today().strftime('%Y%m%d%H')
@@ -603,7 +603,7 @@ def end_game():
         CONDITION = "control"
 
 
-    with open(f"C:/Users/am650/Desktop/Active_Experiment/CRTT/{GAME}_{CONDITION}/{FILE_NAME}.csv", "w", newline='') as csvfile:
+    with open(f"csv_output/{GAME}_{CONDITION}/{FILE_NAME}.csv", "w", newline='') as csvfile:
         datawriter = csv.writer(csvfile, delimiter=',')
         datawriter.writerow(col_names)
         for row in save_files:
