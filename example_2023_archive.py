@@ -424,7 +424,7 @@ def time_check_fb(b):
             win_num = random.randint(1, 2)
     else:
         win_num = random.randint(1, 2)
-        print('fucker')
+        print("error")
 
     unbind_all()
 
@@ -469,7 +469,7 @@ def time_check(b):
             win_num = random.randint(1, 2)
     else:
         win_num = random.randint(1, 2)
-        print('fucker')
+        print("error")
 
     unbind_all()
     root.after(10, ask_blast)
