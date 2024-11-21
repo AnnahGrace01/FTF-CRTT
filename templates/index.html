@@ -23,6 +23,15 @@
       cursor: pointer;
       margin: 5px;
     }
+    #reactButton {
+      padding: 20px 40px;
+      font-size: 24px;
+      color: white;
+      background-color: red;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -49,14 +58,12 @@
         setTimeout(() => {
           document.getElementById("game").innerHTML = `
             <h1>Go!</h1>
-            <button class="button" id="reactButton" onclick="handleReact()">React</button>
+            <button id="reactButton" onclick="handleReact()">React</button>
           `;
           const reactButton = document.getElementById("reactButton");
-          reactButton.classList.add("button-highlight");
-
           const startTime = Date.now();
-          setTimeout(() => {
-            reactButton.onclick = null; // Disable button after 500ms
+
+          reactButton.onclick = () => {
             const reactionTime = Date.now() - startTime;
 
             if (reactionTime < 500) {
@@ -64,7 +71,7 @@
             } else {
               handleBobWin();
             }
-          }, 500);
+          };
         }, Math.random() * 4000); // Random delay between 0-4 seconds
       }, 2000); // Initial delay
     }
@@ -89,8 +96,6 @@
     }
 
     async function sendPlayerResult(playerBlast, playerWon) {
-      console.log("Sending data to server:", { playerBlast, playerWon, winStreak, lossStreak }); // Debug log
-
       const response = await fetch("/play_round", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -98,8 +103,6 @@
       });
 
       const data = await response.json();
-      console.log("Response from server:", data); // Debug log
-
       const result = playerWon
         ? `You win! Bob received blast level ${playerBlast}.`
         : `Bob wins! Bob selected blast level ${data.bob_blast}.`;
