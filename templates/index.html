@@ -1,117 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reaction Time Game</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 0;
+  <script>
+    let player_won = false;
+    let player_blast = 0;
+    let reaction_start = null;
+
+    // Start the reaction timer
+    function startReaction() {
+      document.getElementById("instructions").innerText = "Set...";
+      setTimeout(() => {
+        document.getElementById("instructions").innerText = "GO!";
+        reaction_start = performance.now();
+
+        // Enable reaction via button or spacebar
+        document.getElementById("react").style.display = "block";
+        document.addEventListener("keydown", handleSpaceKey);
+      }, Math.random() * 4000); // Random delay between 0 and 4 seconds
     }
-    h1, p {
-      margin: 20px 0;
+
+    // Handle spacebar reaction
+    function handleSpaceKey(event) {
+      if (event.code === "Space") {
+        react();
+      }
     }
-    .hidden {
-      display: none;
+
+    // React to "GO!"
+    function react() {
+      const reaction_time = performance.now() - reaction_start;
+
+      // Determine winner (player vs Bob)
+      player_won = reaction_time < 500; // Player wins if reaction is faster than 500ms
+      if (player_won) {
+        document.getElementById("instructions").innerText = "You won! Select a blast level.";
+        document.getElementById("blast-buttons").style.display = "block";
+      } else {
+        document.getElementById("instructions").innerText = "Bob won! Get ready for the next round.";
+        sendRoundData();
+      }
+
+      // Cleanup
+      document.removeEventListener("keydown", handleSpaceKey);
+      document.getElementById("react").style.display = "none";
     }
-    .button {
-      padding: 10px 20px;
-      font-size: 18px;
-      cursor: pointer;
-      margin: 5px;
+
+    // Send round data to the server
+    function sendRoundData() {
+      fetch("/play_round", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ player_blast, player_won })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (!player_won) {
+          document.getElementById("instructions").innerText = `Bob's blast level: ${data.bob_blast}`;
+        }
+      });
     }
-    #reactButton {
-      padding: 20px 40px;
-      font-size: 24px;
-      color: white;
-      background-color: red;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+
+    // Submit the player's blast level
+    function submitBlast(blast) {
+      player_blast = blast;
+      document.getElementById("blast-buttons").style.display = "none";
+      sendRoundData();
     }
-  </style>
+  </script>
 </head>
 <body>
   <h1>Reaction Time Game</h1>
-  <div id="instructions">
-    <p>Welcome to the Reaction Time Game!</p>
-    <p>Click "Start" to begin. You'll see "Ready" and "Set" messages before "Go!". React quickly by pressing the "React" button!</p>
-    <button onclick="startRound()" class="button">Start</button>
+  <p id="instructions">Click "Start" to play!</p>
+  <button onclick="startReaction()">Start</button>
+  <button id="react" onclick="react()" style="display: none;">React!</button>
+
+  <div id="blast-buttons" style="display: none;">
+    <p>Select a blast level:</p>
+    <button onclick="submitBlast(1)">1</button>
+    <button onclick="submitBlast(2)">2</button>
+    <button onclick="submitBlast(3)">3</button>
+    <button onclick="submitBlast(4)">4</button>
+    <button onclick="submitBlast(5)">5</button>
+    <button onclick="submitBlast(6)">6</button>
+    <button onclick="submitBlast(7)">7</button>
+    <button onclick="submitBlast(8)">8</button>
   </div>
-  <div id="game" class="hidden"></div>
-
-  <script>
-    let winStreak = 0;
-    let lossStreak = 0;
-
-    async function startRound() {
-      document.getElementById("instructions").classList.add("hidden");
-      document.getElementById("game").innerHTML = "<h1>Get ready...</h1>";
-      document.getElementById("game").classList.remove("hidden");
-
-      setTimeout(() => {
-        document.getElementById("game").innerHTML = "<h1>Set...</h1>";
-
-        setTimeout(() => {
-          document.getElementById("game").innerHTML = `
-            <h1>Go!</h1>
-            <button id="reactButton" onclick="handleReact()">React</button>
-          `;
-          const reactButton = document.getElementById("reactButton");
-          const startTime = Date.now();
-
-          reactButton.onclick = () => {
-            const reactionTime = Date.now() - startTime;
-
-            if (reactionTime < 500) {
-              handlePlayerWin();
-            } else {
-              handleBobWin();
-            }
-          };
-        }, Math.random() * 4000); // Random delay between 0-4 seconds
-      }, 2000); // Initial delay
-    }
-
-    async function handlePlayerWin() {
-      winStreak++;
-      lossStreak = 0;
-
-      // Player picks a blast level
-      document.getElementById("game").innerHTML = `
-        <h1>You win! Pick a blast level:</h1>
-        ${[...Array(8).keys()].map(i => `<button class="button" onclick="sendPlayerResult(${i + 1}, true)">${i + 1}</button>`).join('')}
-      `;
-    }
-
-    async function handleBobWin() {
-      lossStreak++;
-      winStreak = 0;
-
-      // Send data to server for Bob to decide
-      sendPlayerResult(0, false);
-    }
-
-    async function sendPlayerResult(playerBlast, playerWon) {
-      const response = await fetch("/play_round", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ player_blast: playerBlast, player_won: playerWon })
-      });
-
-      const data = await response.json();
-      const result = playerWon
-        ? `You win! Bob received blast level ${playerBlast}.`
-        : `Bob wins! Bob selected blast level ${data.bob_blast}.`;
-
-      document.getElementById("game").innerHTML = `
-        <h1>${result}</h1>
-        <button onclick="startRound()" class="button">Play Again</button>
-      `;
-    }
-  </script>
 </body>
 </html>
