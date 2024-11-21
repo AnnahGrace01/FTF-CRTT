@@ -12,13 +12,9 @@ bot_model = joblib.load(MODEL_PATH)
 
 # Game state variables (persistent across rounds)
 game_state = {
-    "velocity": 0,
-    "acceleration": 0,
     "win_streak": 0,
     "loss_streak": 0,
-    "opponent_last_sound": 0,
-    "opponent_velocity": 0,
-    "opponent_acceleration": 0
+    "last_winning_blasts": []  # Store player's blast levels when they win
 }
 
 # Main page route
@@ -39,34 +35,48 @@ def play_round():
     # Debug log: Player data
     print("Received data from player:", data)
 
-    # Update win/loss streaks
     if player_won:
+        # Update win streak and reset loss streak
         game_state["win_streak"] += 1
         game_state["loss_streak"] = 0
-    else:
-        game_state["win_streak"] = 0
-        game_state["loss_streak"] += 1
 
-    # Update velocity and acceleration
-    opponent_velocity = player_blast - game_state["opponent_last_sound"]
-    opponent_acceleration = opponent_velocity - game_state["velocity"]
-    game_state["velocity"] = opponent_velocity
-    game_state["acceleration"] = opponent_acceleration
-    game_state["opponent_last_sound"] = player_blast
+        # Update the list of last winning blasts
+        game_state["last_winning_blasts"].append(player_blast)
+
+        # Keep only the last three winning blasts
+        if len(game_state["last_winning_blasts"]) > 3:
+            game_state["last_winning_blasts"].pop(0)
+    else:
+        # Update loss streak and reset win streak
+        game_state["loss_streak"] += 1
+        game_state["win_streak"] = 0
+
+    # Calculate velocity and acceleration based on last winning blasts
+    last_blast = game_state["last_winning_blasts"][-1] if len(game_state["last_winning_blasts"]) >= 1 else 0
+    velocity = (
+        game_state["last_winning_blasts"][-1] - game_state["last_winning_blasts"][-2]
+        if len(game_state["last_winning_blasts"]) >= 2 else 0
+    )
+    acceleration = (
+        (game_state["last_winning_blasts"][-1] - game_state["last_winning_blasts"][-2])
+        - (game_state["last_winning_blasts"][-2] - game_state["last_winning_blasts"][-3])
+        if len(game_state["last_winning_blasts"]) >= 3 else 0
+    )
 
     # Debug log: Updated game state
     print("Updated game state:", game_state)
+    print(f"Last blast: {last_blast}, Velocity: {velocity}, Acceleration: {acceleration}")
 
-    # If Bob needs to make a decision
+    # If Bob needs to make a decision (when the player loses)
     if not player_won:
         input_data = pd.DataFrame({
-            'velocity': [game_state["velocity"]],
-            'acceleration': [game_state["acceleration"]],
+            'velocity': [velocity],
+            'acceleration': [acceleration],
             'win_streak': [game_state["win_streak"]],
             'loss_streak': [game_state["loss_streak"]],
-            'opponent_last_sound': [game_state["opponent_last_sound"]],
-            'opponent_velocity': [game_state["opponent_velocity"]],
-            'opponent_acceleration': [game_state["opponent_acceleration"]]
+            'opponent_last_sound': [last_blast],
+            'opponent_velocity': [velocity],
+            'opponent_acceleration': [acceleration]
         })
 
         # Debug log: Input to model
