@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2487.5">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Reaction Time Game&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>async function playGame() {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const velocity = parseFloat(document.getElementById("velocity").value) || 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const acceleration = parseFloat(document.getElementById("acceleration").value) || 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const winStreak = parseInt(document.getElementById("win_streak").value) || 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const lossStreak = parseInt(document.getElementById("loss_streak").value) || 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const opponentLastSound = parseFloat(document.getElementById("opponent_last_sound").value) || 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const opponentVelocity = parseFloat(document.getElementById("opponent_velocity").value) || 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const opponentAcceleration = parseFloat(document.getElementById("opponent_acceleration").value) || 0;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const response = await fetch('/bot_decision', {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>method: 'POST',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>headers: {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>'Content-Type': 'application/json',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>},</p>
+<p class="p1"><span class="Apple-converted-space">                </span>body: JSON.stringify({</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>velocity,</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>acceleration,</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>win_streak: winStreak,</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>loss_streak: lossStreak,</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>opponent_last_sound: opponentLastSound,</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>opponent_velocity: opponentVelocity,</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>opponent_acceleration: opponentAcceleration,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}),</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const data = await response.json();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById("result").innerText = `Bot's chosen blast level: ${data.bot_blast}`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;h1&gt;Reaction Time Game&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;p&gt;Enter the game dynamics below:&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;label&gt;Velocity:&lt;/label&gt; &lt;input id="velocity" type="number"&gt;&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;label&gt;Acceleration:&lt;/label&gt; &lt;input id="acceleration" type="number"&gt;&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;label&gt;Win Streak:&lt;/label&gt; &lt;input id="win_streak" type="number"&gt;&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;label&gt;Loss Streak:&lt;/label&gt; &lt;input id="loss_streak" type="number"&gt;&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;label&gt;Opponent Last Sound:&lt;/label&gt; &lt;input id="opponent_last_sound" type="number"&gt;&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;label&gt;Opponent Velocity:&lt;/label&gt; &lt;input id="opponent_velocity" type="number"&gt;&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;label&gt;Opponent Acceleration:&lt;/label&gt; &lt;input id="opponent_acceleration" type="number"&gt;&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;button onclick="playGame()"&gt;Submit&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;p id="result"&gt;&lt;/p&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
