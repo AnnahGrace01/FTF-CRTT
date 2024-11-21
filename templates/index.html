@@ -92,7 +92,21 @@
             updateMessage("Get Ready!");
         });
 
-        // Other round and reaction button logic goes here
+        document.getElementById('next-round-button').addEventListener('click', () => {
+            fetch('/play_round', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ player_blast: 0, player_won: false })
+            }).then(response => response.json()).then(data => {
+                if (data.waiting_for_blast) {
+                    document.getElementById('blast-buttons').style.display = 'block';
+                    updateMessage("You won! Select a blast level.");
+                } else {
+                    updateMessage(`Bob chose blast level: ${data.bob_blast}`);
+                }
+                document.getElementById("next-round-button").style.display = "none";
+            });
+        });
     </script>
 </body>
 </html>
