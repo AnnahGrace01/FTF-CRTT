@@ -10,59 +10,67 @@ app = Flask(__name__)
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "bot_model.pkl")
 bot_model = joblib.load(MODEL_PATH)
 
-# Game state variables
-velocity = 0
-acceleration = 0
-win_streak = 0
-loss_streak = 0
-opponent_last_sound = 0
-opponent_velocity = 0
-opponent_acceleration = 0
+# Game state variables (persistent across rounds)
+game_state = {
+    "velocity": 0,
+    "acceleration": 0,
+    "win_streak": 0,
+    "loss_streak": 0,
+    "opponent_last_sound": 0,
+    "opponent_velocity": 0,
+    "opponent_acceleration": 0
+}
 
 # Main page route
 @app.route('/')
 def home():
-    return render_template('index.html')  # Loads the frontend HTML
+    return render_template('index.html')
 
 # Play round route
 @app.route('/play_round', methods=['POST'])
 def play_round():
-    global velocity, acceleration, win_streak, loss_streak, opponent_last_sound, opponent_velocity, opponent_acceleration
+    global game_state
 
     # Receive data from the frontend
     data = request.json
-    print("Received data from player:", data)  # Debug log
-
     player_blast = int(data.get('player_blast', 0))
     player_won = data.get('player_won', False)
 
+    # Debug log: Player data
+    print("Received data from player:", data)
+
     # Update win/loss streaks
     if player_won:
-        win_streak += 1
-        loss_streak = 0
+        game_state["win_streak"] += 1
+        game_state["loss_streak"] = 0
     else:
-        win_streak = 0
-        loss_streak += 1
+        game_state["win_streak"] = 0
+        game_state["loss_streak"] += 1
 
     # Update velocity and acceleration
-    opponent_velocity = player_blast - opponent_last_sound
-    opponent_acceleration = opponent_velocity - velocity
-    velocity = opponent_velocity
-    acceleration = opponent_acceleration
-    opponent_last_sound = player_blast
+    opponent_velocity = player_blast - game_state["opponent_last_sound"]
+    opponent_acceleration = opponent_velocity - game_state["velocity"]
+    game_state["velocity"] = opponent_velocity
+    game_state["acceleration"] = opponent_acceleration
+    game_state["opponent_last_sound"] = player_blast
+
+    # Debug log: Updated game state
+    print("Updated game state:", game_state)
 
     # If Bob needs to make a decision
     if not player_won:
         input_data = pd.DataFrame({
-            'velocity': [velocity],
-            'acceleration': [acceleration],
-            'win_streak': [win_streak],
-            'loss_streak': [loss_streak],
-            'opponent_last_sound': [opponent_last_sound],
-            'opponent_velocity': [opponent_velocity],
-            'opponent_acceleration': [opponent_acceleration]
+            'velocity': [game_state["velocity"]],
+            'acceleration': [game_state["acceleration"]],
+            'win_streak': [game_state["win_streak"]],
+            'loss_streak': [game_state["loss_streak"]],
+            'opponent_last_sound': [game_state["opponent_last_sound"]],
+            'opponent_velocity': [game_state["opponent_velocity"]],
+            'opponent_acceleration': [game_state["opponent_acceleration"]]
         })
-        print("Input data for bot model:", input_data)  # Debug log
+
+        # Debug log: Input to model
+        print("Input data for bot model:", input_data)
 
         # Predict Bob's blast level
         bob_blast = bot_model.predict(input_data)[0]
@@ -71,12 +79,3 @@ def play_round():
         return jsonify({'bob_blast': int(round(bob_blast))})
 
     return jsonify({})
-
-# Debugging endpoint to verify the server is running
-@app.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({'status': 'Running!'})
-
-# Run the Flask app
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
