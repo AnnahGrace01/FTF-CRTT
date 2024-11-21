@@ -28,6 +28,23 @@
             background-color: red;
             color: white;
         }
+        .blast-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .blast-button {
+            padding: 10px 20px;
+            font-size: 20px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+        .blast-button:hover {
+            background-color: #0056b3;
+        }
     </style>
     <script>
         let playerWon = false;
@@ -73,21 +90,49 @@
 
             playerWon = reactionTime < 500; // Bob's reaction time = 500ms
 
+            if (playerWon) {
+                showBlastSelection();
+            } else {
+                await sendPlayerResult(0, false); // Player loses, Bob selects blast level
+            }
+        }
+
+        function showBlastSelection() {
+            document.getElementById("game").innerHTML = `
+                <h1>You win! Select a blast level for Bob:</h1>
+                <div class="blast-buttons">
+                    ${[1, 2, 3, 4, 5, 6, 7, 8]
+                        .map(
+                            (blast) =>
+                                `<button class="blast-button" onclick="submitBlastLevel(${blast})">${blast}</button>`
+                        )
+                        .join("")}
+                </div>
+            `;
+        }
+
+        async function submitBlastLevel(blastLevel) {
+            await sendPlayerResult(blastLevel, true); // Player wins, sends blast level
+        }
+
+        async function sendPlayerResult(playerBlast, playerWon) {
             const response = await fetch("/play_round", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    player_blast: 5, // Default blast level (adjust as needed)
+                    player_blast: playerBlast,
                     player_won: playerWon
                 })
             });
 
             const data = await response.json();
-            const result = playerWon ? "You win!" : "Bob wins!";
+            const result = playerWon
+                ? `You win! You sent Bob blast level ${playerBlast}.`
+                : `Bob wins! Bob selected blast level ${data.bob_blast}.`;
+
             document.getElementById("game").innerHTML = `
                 <h1>${result}</h1>
-                <p>Bob selected blast level ${data.bob_blast}.</p>
-                <button onclick="startRound()">Play Again</button>
+                <button onclick="startRound()">Next Round</button>
             `;
         }
 
