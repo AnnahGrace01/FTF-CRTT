@@ -12,6 +12,7 @@
             justify-content: center;
             height: 100vh;
             font-family: Arial, sans-serif;
+            text-align: center;
         }
 
         #react-button {
@@ -35,23 +36,36 @@
             font-size: 20px;
             cursor: pointer;
         }
+
+        #next-round-button {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <div id="message">Press "Start" to begin the game.</div>
-    <button id="start-button">Start</button>
-    <button id="react-button" class="red">React</button>
-    <div id="blast-buttons">
-        <button class="blast-button" onclick="selectBlast(1)">1</button>
-        <button class="blast-button" onclick="selectBlast(2)">2</button>
-        <button class="blast-button" onclick="selectBlast(3)">3</button>
-        <button class="blast-button" onclick="selectBlast(4)">4</button>
-        <button class="blast-button" onclick="selectBlast(5)">5</button>
-        <button class="blast-button" onclick="selectBlast(6)">6</button>
-        <button class="blast-button" onclick="selectBlast(7)">7</button>
-        <button class="blast-button" onclick="selectBlast(8)">8</button>
+    <div id="instructions">
+        <h1>Welcome to the Reaction Time Game!</h1>
+        <p>
+            Press the "Start" button to begin. When the screen says "Go", press the "React" button (or spacebar) as quickly as possible. 
+            If you win, select a blast level for Bob and proceed to the next round. Good luck!
+        </p>
+        <button id="start-button">Start</button>
     </div>
-    <button id="next-round-button" style="display: none;">Next Round</button>
+    <div id="game" style="display:none;">
+        <div id="message">Get Ready!</div>
+        <button id="react-button">React</button>
+        <div id="blast-buttons">
+            <button class="blast-button" onclick="selectBlast(1)">1</button>
+            <button class="blast-button" onclick="selectBlast(2)">2</button>
+            <button class="blast-button" onclick="selectBlast(3)">3</button>
+            <button class="blast-button" onclick="selectBlast(4)">4</button>
+            <button class="blast-button" onclick="selectBlast(5)">5</button>
+            <button class="blast-button" onclick="selectBlast(6)">6</button>
+            <button class="blast-button" onclick="selectBlast(7)">7</button>
+            <button class="blast-button" onclick="selectBlast(8)">8</button>
+        </div>
+        <button id="next-round-button">Next Round</button>
+    </div>
 
     <script>
         let waitingForBlast = false;
@@ -72,7 +86,13 @@
             });
         }
 
-        // Other functions for round logic
+        document.getElementById('start-button').addEventListener('click', () => {
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('game').style.display = 'block';
+            updateMessage("Get Ready!");
+        });
+
+        // Other round and reaction button logic goes here
     </script>
 </body>
 </html>
