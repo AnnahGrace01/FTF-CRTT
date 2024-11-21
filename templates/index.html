@@ -2,8 +2,45 @@
 <html>
 <head>
     <title>Reaction Time Game</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
+        #game {
+            text-align: center;
+        }
+        #reactButton {
+            display: none;
+            padding: 20px 40px;
+            font-size: 20px;
+            background-color: lightgray;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        #reactButton.active {
+            background-color: red;
+            color: white;
+        }
+    </style>
     <script>
         let playerWon = false;
+        let reactionStartTime;
+
+        function showInstructions() {
+            document.getElementById("game").innerHTML = `
+                <h1>Welcome to the Reaction Time Game!</h1>
+                <p>Instructions:</p>
+                <p>Press the spacebar or click the red button as fast as you can when you see "Go!"</p>
+                <button onclick="startRound()">Start Game</button>
+            `;
+        }
 
         function startRound() {
             document.getElementById("game").innerHTML = `
@@ -15,15 +52,25 @@
                 setTimeout(() => {
                     document.getElementById("game").innerHTML = `
                         <h1>Go!</h1>
-                        <button onclick="playerReact()">React Now!</button>
+                        <button id="reactButton" class="active" onclick="playerReact()">React!</button>
                     `;
-                    window.startTime = Date.now();
+                    document.getElementById("reactButton").style.display = "inline-block";
+                    reactionStartTime = Date.now();
+                    document.addEventListener("keydown", handleSpacebarPress);
                 }, randomDelay);
             }, 1000);
         }
 
+        function handleSpacebarPress(event) {
+            if (event.code === "Space") {
+                playerReact();
+            }
+        }
+
         async function playerReact() {
-            const reactionTime = Date.now() - window.startTime;
+            const reactionTime = Date.now() - reactionStartTime;
+            document.removeEventListener("keydown", handleSpacebarPress);
+
             playerWon = reactionTime < 500; // Bob's reaction time = 500ms
 
             const response = await fetch("/play_round", {
@@ -39,15 +86,12 @@
             const result = playerWon ? "You win!" : "Bob wins!";
             document.getElementById("game").innerHTML = `
                 <h1>${result}</h1>
-                <p>Your reaction time: ${reactionTime} ms</p>
-                <p>Bob's blast level: ${data.bob_blast}</p>
-                <p>Win streak: ${data.win_streak}</p>
-                <p>Loss streak: ${data.loss_streak}</p>
+                <p>Bob selected blast level ${data.bob_blast}.</p>
                 <button onclick="startRound()">Play Again</button>
             `;
         }
 
-        window.onload = startRound;
+        window.onload = showInstructions;
     </script>
 </head>
 <body>
