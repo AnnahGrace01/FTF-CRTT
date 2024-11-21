@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import random
 import pandas as pd
 
@@ -18,6 +18,11 @@ game_state = {
     'opponent_velocity': 0,
     'opponent_acceleration': 0
 }
+
+@app.route('/')
+def home():
+    # Serve the main HTML page
+    return render_template('index.html')
 
 @app.route('/play_round', methods=['POST'])
 def play_round():
