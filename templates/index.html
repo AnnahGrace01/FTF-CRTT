@@ -13,13 +13,13 @@
             height: 100vh;
             font-family: Arial, sans-serif;
             text-align: center;
+            margin: 0;
         }
 
         #react-button {
+            display: none;
             padding: 10px 20px;
             font-size: 20px;
-            display: none;
-            cursor: pointer;
         }
 
         .red {
@@ -40,11 +40,6 @@
 
         #next-round-button {
             display: none;
-        }
-
-        #message {
-            font-size: 24px;
-            margin: 20px auto;
         }
     </style>
 </head>
@@ -74,16 +69,16 @@
     </div>
 
     <script>
-        let gameInProgress = false;
         let startTime = 0;
+        let gameInProgress = false;
         let waitingForBlast = false;
 
-        // Function to update message text
+        // Update the message displayed to the player
         function updateMessage(msg) {
             document.getElementById("message").innerText = msg;
         }
 
-        // Function to handle blast selection
+        // Select a blast level
         function selectBlast(blast) {
             fetch('/set_player_blast', {
                 method: 'POST',
@@ -96,60 +91,19 @@
             });
         }
 
-        // Start button handler
+        // Start the game
         document.getElementById('start-button').addEventListener('click', () => {
             document.getElementById('instructions').style.display = 'none';
             document.getElementById('game').style.display = 'block';
             startRound();
         });
 
-        // Next round button handler
-        document.getElementById('next-round-button').addEventListener('click', () => {
-            document.getElementById("next-round-button").style.display = "none";
-            startRound();
-        });
-
-        // Start a new round
-        function startRound() {
-            gameInProgress = false;
-            updateMessage("Get Ready!");
-            document.getElementById('react-button').style.display = 'none';
-
-            setTimeout(() => {
-                updateMessage("Set");
-                const randomDelay = Math.random() * 3500 + 500; // 0.5 to 4 seconds
-                setTimeout(() => {
-                    updateMessage("Go!");
-                    gameInProgress = true;
-                    startTime = performance.now();
-                    enableReaction();
-                }, randomDelay);
-            }, 1000); // "Get Ready!" duration
-        }
-
-        // Enable the reaction button
-        function enableReaction() {
-            const reactButton = document.getElementById('react-button');
-            reactButton.style.display = 'block';
-            reactButton.classList.add('red');
-            reactButton.disabled = false;
-            reactButton.focus();
-        }
-
-        // Handle reaction
-        document.getElementById('react-button').addEventListener('click', handleReaction);
-        document.addEventListener('keydown', (event) => {
-            if (event.code === 'Space' && gameInProgress) {
-                handleReaction();
-            }
-        });
-
+        // Handle the reaction
         function handleReaction() {
             if (!gameInProgress) return;
 
             gameInProgress = false;
             const reactionTime = performance.now() - startTime;
-            document.getElementById('react-button').style.display = 'none';
 
             fetch('/play_round', {
                 method: 'POST',
@@ -167,6 +121,37 @@
                 }
             });
         }
+
+        // Start a new round
+        function startRound() {
+            updateMessage("Get Ready!");
+            setTimeout(() => {
+                updateMessage("Set...");
+                const goDelay = Math.random() * 4000; // Random delay between 0-4 seconds
+                setTimeout(() => {
+                    updateMessage("Go!");
+                    document.getElementById('react-button').classList.add('red');
+                    startTime = performance.now();
+                    gameInProgress = true;
+                }, goDelay);
+            }, 1000);
+        }
+
+        // Next round button
+        document.getElementById('next-round-button').addEventListener('click', () => {
+            document.getElementById("next-round-button").style.display = "none";
+            startRound();
+        });
+
+        // Reaction button
+        document.getElementById('react-button').addEventListener('click', handleReaction);
+
+        // Allow spacebar to trigger reaction
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                handleReaction();
+            }
+        });
     </script>
 </body>
 </html>
