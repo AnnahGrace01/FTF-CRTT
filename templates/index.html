@@ -1,28 +1,78 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test Bot Decision</title>
+    <title>Reaction Time Game</title>
     <script>
-        async function playGame() {
+        let startTime = 0; // Track when the "Set" message is shown
+        const bobReactionTime = 500; // Bob's fixed reaction time (ms)
+
+        // Instructions to start the game
+        function showInstructions() {
+            document.getElementById("game").innerHTML = `
+                <h1>Reaction Time Game</h1>
+                <p>Instructions:</p>
+                <ul>
+                    <li>When the game says "Go!", press the button as quickly as possible.</li>
+                    <li>If you're faster than Bob (500ms), you win. Otherwise, Bob wins.</li>
+                    <li>The game will continue indefinitely until you leave the page.</li>
+                </ul>
+                <button onclick="startGame()">Start Game</button>
+            `;
+        }
+
+        // Start the game sequence
+        function startGame() {
+            document.getElementById("game").innerHTML = `
+                <h1>Get Ready...</h1>
+            `;
+
+            // Show "Set" after 1 second
+            setTimeout(() => {
+                document.getElementById("game").innerHTML = `<h1>Set...</h1>`;
+                // Show "Go!" after a random interval (0-4 seconds)
+                const randomDelay = Math.random() * 4000; // 0 to 4000ms
+                setTimeout(() => {
+                    document.getElementById("game").innerHTML = `
+                        <h1>Go!</h1>
+                        <button onclick="recordReaction()">Click Me!</button>
+                    `;
+                    startTime = Date.now(); // Record the time "Go!" is displayed
+                }, randomDelay);
+            }, 1000);
+        }
+
+        // Record player's reaction time
+        async function recordReaction() {
+            const reactionTime = Date.now() - startTime; // Calculate reaction time
+            const result = reactionTime < bobReactionTime ? "You win!" : "Bob wins!";
+
+            // Send data to Bob (via backend)
             const response = await fetch('/bot_decision', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    velocity: 1,
-                    acceleration: 0.5,
-                    win_streak: 2,
-                    loss_streak: 0,
-                    opponent_last_sound: 3,
-                    opponent_velocity: 1,
-                    opponent_acceleration: -1
-                })
+                    reaction_time: reactionTime,
+                    result,
+                }),
             });
+
             const data = await response.json();
-            alert('Bot Blast Level: ' + data.bot_blast);
+            const botDecision = data.bot_blast;
+
+            // Display results and restart the game
+            document.getElementById("game").innerHTML = `
+                <h1>${result}</h1>
+                <p>Your reaction time: ${reactionTime} ms</p>
+                <p>Bob's decision: ${botDecision}</p>
+                <button onclick="startGame()">Play Again</button>
+            `;
         }
+
+        // Initialize the game
+        window.onload = showInstructions;
     </script>
 </head>
 <body>
-    <button onclick="playGame()">Test Bot</button>
+    <div id="game"></div>
 </body>
 </html>
