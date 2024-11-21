@@ -1,90 +1,78 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Reaction Time Game</title>
-  <script>
-    let player_won = false;
-    let player_blast = 0;
-    let reaction_start = null;
-
-    // Start the reaction timer
-    function startReaction() {
-      document.getElementById("instructions").innerText = "Set...";
-      setTimeout(() => {
-        document.getElementById("instructions").innerText = "GO!";
-        reaction_start = performance.now();
-
-        // Enable reaction via button or spacebar
-        document.getElementById("react").style.display = "block";
-        document.addEventListener("keydown", handleSpaceKey);
-      }, Math.random() * 4000); // Random delay between 0 and 4 seconds
-    }
-
-    // Handle spacebar reaction
-    function handleSpaceKey(event) {
-      if (event.code === "Space") {
-        react();
-      }
-    }
-
-    // React to "GO!"
-    function react() {
-      const reaction_time = performance.now() - reaction_start;
-
-      // Determine winner (player vs Bob)
-      player_won = reaction_time < 500; // Player wins if reaction is faster than 500ms
-      if (player_won) {
-        document.getElementById("instructions").innerText = "You won! Select a blast level.";
-        document.getElementById("blast-buttons").style.display = "block";
-      } else {
-        document.getElementById("instructions").innerText = "Bob won! Get ready for the next round.";
-        sendRoundData();
-      }
-
-      // Cleanup
-      document.removeEventListener("keydown", handleSpaceKey);
-      document.getElementById("react").style.display = "none";
-    }
-
-    // Send round data to the server
-    function sendRoundData() {
-      fetch("/play_round", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ player_blast, player_won })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (!player_won) {
-          document.getElementById("instructions").innerText = `Bob's blast level: ${data.bob_blast}`;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reaction Time Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
         }
-      });
-    }
 
-    // Submit the player's blast level
-    function submitBlast(blast) {
-      player_blast = blast;
-      document.getElementById("blast-buttons").style.display = "none";
-      sendRoundData();
-    }
-  </script>
+        #react-button {
+            display: none;
+            padding: 10px 20px;
+            font-size: 20px;
+        }
+
+        .red {
+            background-color: red;
+            color: white;
+        }
+
+        #blast-buttons {
+            display: none;
+        }
+
+        .blast-button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-  <h1>Reaction Time Game</h1>
-  <p id="instructions">Click "Start" to play!</p>
-  <button onclick="startReaction()">Start</button>
-  <button id="react" onclick="react()" style="display: none;">React!</button>
+    <div id="message">Press "Start" to begin the game.</div>
+    <button id="start-button">Start</button>
+    <button id="react-button" class="red">React</button>
+    <div id="blast-buttons">
+        <button class="blast-button" onclick="selectBlast(1)">1</button>
+        <button class="blast-button" onclick="selectBlast(2)">2</button>
+        <button class="blast-button" onclick="selectBlast(3)">3</button>
+        <button class="blast-button" onclick="selectBlast(4)">4</button>
+        <button class="blast-button" onclick="selectBlast(5)">5</button>
+        <button class="blast-button" onclick="selectBlast(6)">6</button>
+        <button class="blast-button" onclick="selectBlast(7)">7</button>
+        <button class="blast-button" onclick="selectBlast(8)">8</button>
+    </div>
+    <button id="next-round-button" style="display: none;">Next Round</button>
 
-  <div id="blast-buttons" style="display: none;">
-    <p>Select a blast level:</p>
-    <button onclick="submitBlast(1)">1</button>
-    <button onclick="submitBlast(2)">2</button>
-    <button onclick="submitBlast(3)">3</button>
-    <button onclick="submitBlast(4)">4</button>
-    <button onclick="submitBlast(5)">5</button>
-    <button onclick="submitBlast(6)">6</button>
-    <button onclick="submitBlast(7)">7</button>
-    <button onclick="submitBlast(8)">8</button>
-  </div>
+    <script>
+        let waitingForBlast = false;
+
+        function updateMessage(msg) {
+            document.getElementById("message").innerText = msg;
+        }
+
+        function selectBlast(blast) {
+            fetch('/set_player_blast', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ player_blast: blast })
+            }).then(() => {
+                waitingForBlast = false;
+                document.getElementById("blast-buttons").style.display = 'none';
+                document.getElementById("next-round-button").style.display = 'block';
+            });
+        }
+
+        // Other functions for round logic
+    </script>
 </body>
 </html>
