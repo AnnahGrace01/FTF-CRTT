@@ -16,9 +16,10 @@
         }
 
         #react-button {
-            display: none;
             padding: 10px 20px;
             font-size: 20px;
+            display: none;
+            cursor: pointer;
         }
 
         .red {
@@ -39,6 +40,11 @@
 
         #next-round-button {
             display: none;
+        }
+
+        #message {
+            font-size: 24px;
+            margin: 20px auto;
         }
     </style>
 </head>
@@ -68,12 +74,16 @@
     </div>
 
     <script>
+        let gameInProgress = false;
+        let startTime = 0;
         let waitingForBlast = false;
 
+        // Function to update message text
         function updateMessage(msg) {
             document.getElementById("message").innerText = msg;
         }
 
+        // Function to handle blast selection
         function selectBlast(blast) {
             fetch('/set_player_blast', {
                 method: 'POST',
@@ -86,27 +96,77 @@
             });
         }
 
+        // Start button handler
         document.getElementById('start-button').addEventListener('click', () => {
             document.getElementById('instructions').style.display = 'none';
             document.getElementById('game').style.display = 'block';
-            updateMessage("Get Ready!");
+            startRound();
         });
 
+        // Next round button handler
         document.getElementById('next-round-button').addEventListener('click', () => {
+            document.getElementById("next-round-button").style.display = "none";
+            startRound();
+        });
+
+        // Start a new round
+        function startRound() {
+            gameInProgress = false;
+            updateMessage("Get Ready!");
+            document.getElementById('react-button').style.display = 'none';
+
+            setTimeout(() => {
+                updateMessage("Set");
+                const randomDelay = Math.random() * 3500 + 500; // 0.5 to 4 seconds
+                setTimeout(() => {
+                    updateMessage("Go!");
+                    gameInProgress = true;
+                    startTime = performance.now();
+                    enableReaction();
+                }, randomDelay);
+            }, 1000); // "Get Ready!" duration
+        }
+
+        // Enable the reaction button
+        function enableReaction() {
+            const reactButton = document.getElementById('react-button');
+            reactButton.style.display = 'block';
+            reactButton.classList.add('red');
+            reactButton.disabled = false;
+            reactButton.focus();
+        }
+
+        // Handle reaction
+        document.getElementById('react-button').addEventListener('click', handleReaction);
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space' && gameInProgress) {
+                handleReaction();
+            }
+        });
+
+        function handleReaction() {
+            if (!gameInProgress) return;
+
+            gameInProgress = false;
+            const reactionTime = performance.now() - startTime;
+            document.getElementById('react-button').style.display = 'none';
+
             fetch('/play_round', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ player_blast: 0, player_won: false })
-            }).then(response => response.json()).then(data => {
+                body: JSON.stringify({ reaction_time: reactionTime })
+            })
+            .then(response => response.json())
+            .then(data => {
                 if (data.waiting_for_blast) {
                     document.getElementById('blast-buttons').style.display = 'block';
                     updateMessage("You won! Select a blast level.");
                 } else {
                     updateMessage(`Bob chose blast level: ${data.bob_blast}`);
+                    document.getElementById("next-round-button").style.display = "block";
                 }
-                document.getElementById("next-round-button").style.display = "none";
             });
-        });
+        }
     </script>
 </body>
 </html>
