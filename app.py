@@ -32,6 +32,8 @@ def play_round():
     player_blast = data.get('player_blast', 0)
     player_won = data.get('player_won', False)
 
+    print(f"Received data from player: {data}")
+
     if player_won:
         # Update player stats on a win
         game_state["player_last_wins"].append(player_blast)
@@ -60,6 +62,8 @@ def play_round():
         game_state["win_streak"] += 1
         game_state["loss_streak"] = 0
         game_state["waiting_for_blast"] = True  # Wait for player to select a blast
+
+        print(f"Updated game state after player win: {game_state}")
         return jsonify({'waiting_for_blast': True})  # Notify front-end
 
     else:
@@ -78,8 +82,11 @@ def play_round():
             "opponent_acceleration": game_state["player_acceleration"]
         }])
 
+        print(f"Input data for bot model: {input_data}")
+
         # Predict Bob's blast level
         bob_blast = bot_model.predict(input_data)[0]
+        print(f"Bob's blast level: {bob_blast}")
         return jsonify({'bob_blast': int(round(bob_blast))})
 
 
@@ -89,6 +96,8 @@ def set_player_blast():
     player_blast = data.get('player_blast', 0)
     game_state["player_last_level"] = player_blast
     game_state["waiting_for_blast"] = False  # Blast has been selected
+
+    print(f"Player selected blast: {player_blast}")
     return jsonify({'success': True})
 
 
