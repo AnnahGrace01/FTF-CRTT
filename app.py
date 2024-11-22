@@ -1,12 +1,13 @@
-from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask import Flask, request, jsonify, render_template
 import random
 import pandas as pd
+import pickle
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
-# Dummy model for Bob's decision (replace with actual model)
-def bot_decision(input_data):
-    return random.randint(1, 8)
+# Load the real model from the pickle file
+with open('bot_model.pkl', 'rb') as model_file:
+    bot_model = pickle.load(model_file)
 
 # Game state
 game_state = {
@@ -31,6 +32,11 @@ def log_game_state(action):
     print(f"Loss Streak: {game_state['loss_streak']}, Last Loss Streak: {game_state['last_loss_streak']}")
     print("-------------------")
 
+# Predict Bob's blast level using the real model
+def bot_decision(input_data):
+    return bot_model.predict(input_data)[0]
+
+# Root route to serve the game
 @app.route('/')
 def index():
     return render_template('index.html')
