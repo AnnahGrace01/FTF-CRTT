@@ -7,7 +7,7 @@ app = Flask(__name__)
 # Load the real bot model
 bot_model = joblib.load('bot_model.pkl')
 
-# Game state reset
+# Reset game state
 def reset_game_state():
     return {
         'game_round': 0,
@@ -60,7 +60,7 @@ def play_round():
     player_won = player_reaction_time < bob_reaction_time
 
     if player_won:
-        # Update Player’s velocity and acceleration
+        # Prepare player stats for the next round before blast is given
         if game_state['game_round'] > 1:
             game_state['player_velocity'] = game_state['player_last_sound'] - game_state['prev_player_last_sound']
         else:
@@ -71,14 +71,14 @@ def play_round():
         else:
             game_state['player_acceleration'] = 0
 
-        # Update streaks
+        # Update Bob's streaks
         game_state['bob_loss_streak'] += 1
         game_state['bob_win_streak'] = 0
 
         log_game_state("Player Won - Waiting for Blast")
         return jsonify({'waiting_for_blast': True})
     else:
-        # Update Bob’s velocity and acceleration
+        # Prepare Bob's stats for his decision
         if game_state['game_round'] > 1:
             game_state['bob_velocity'] = game_state['bob_last_sound'] - game_state['prev_bob_last_sound']
         else:
@@ -89,7 +89,7 @@ def play_round():
         else:
             game_state['bob_acceleration'] = 0
 
-        # Update streaks
+        # Update Bob's streaks
         game_state['bob_win_streak'] += 1
         game_state['bob_loss_streak'] = 0
 
@@ -122,7 +122,7 @@ def set_player_blast():
     data = request.json
     player_blast = data.get('player_blast', 0)
 
-    # Update Player’s last sound and velocity
+    # Update player's stats after their blast is given
     game_state['prev_player_velocity'] = game_state['player_velocity']
     game_state['prev_player_last_sound'] = game_state['player_last_sound']
     game_state['player_last_sound'] = player_blast
