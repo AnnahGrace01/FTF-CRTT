@@ -60,16 +60,21 @@ def prepare_bob_for_decision():
     """Update all relevant stats before Bob makes a decision."""
     global game_state
 
-    # Only calculate velocity and acceleration if there are valid previous values
+    # Update Bob's velocity only if Bob has at least 2 blasts
     if game_state['bob_win_streak'] >= 2 and game_state['prev_bob_last_sound'] is not None:
         game_state['bob_velocity'] = game_state['bob_last_sound'] - game_state['prev_bob_last_sound']
     else:
         game_state['bob_velocity'] = None
 
+    # Update Bob's acceleration only if Bob has at least 3 blasts
     if game_state['bob_win_streak'] >= 3 and game_state['prev_bob_velocity'] is not None:
         game_state['bob_acceleration'] = game_state['bob_velocity'] - game_state['prev_bob_velocity']
     else:
         game_state['bob_acceleration'] = None
+
+    # Ensure Bob's velocity and acceleration are carried over correctly
+    game_state['prev_bob_last_sound'] = game_state['bob_last_sound']
+    game_state['prev_bob_velocity'] = game_state['bob_velocity']
 
     log_bob_inputs()
 
