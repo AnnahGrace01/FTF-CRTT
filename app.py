@@ -40,6 +40,20 @@ def log_game_state(message):
     print("-------------------")
 
 
+def log_bob_inputs():
+    """Logs the inputs Bob receives for making a decision."""
+    print("Bob's Decision Inputs:")
+    print(f"Player Last Sound: {game_state['player_last_sound']}")
+    print(f"Player Velocity: {game_state['player_velocity']}")
+    print(f"Player Acceleration: {game_state['player_acceleration']}")
+    print(f"Bob Last Sound: {game_state['bob_last_sound']}")
+    print(f"Bob Velocity: {game_state['bob_velocity']}")
+    print(f"Bob Acceleration: {game_state['bob_acceleration']}")
+    print(f"Bob Win Streak: {game_state['bob_win_streak']}")
+    print(f"Bob Loss Streak: {game_state['bob_loss_streak']}")
+    print("-------------------")
+
+
 def prepare_bob_for_decision():
     """Update all relevant stats before Bob makes a decision."""
     global game_state
@@ -78,6 +92,8 @@ def prepare_bob_for_decision():
     game_state['prev_player_last_sound'] = game_state['player_last_sound']
     game_state['prev_player_velocity'] = game_state['player_velocity']
 
+    log_bob_inputs()  # Log inputs Bob receives for decision-making
+
 
 @app.route('/')
 def index():
@@ -101,17 +117,6 @@ def play_round():
         # Update Bob's streaks
         game_state['bob_loss_streak'] += 1
         game_state['bob_win_streak'] = 0
-
-        # Update player's velocity and acceleration
-        if game_state['game_round'] > 1:
-            game_state['player_velocity'] = game_state['player_last_sound'] - game_state['prev_player_last_sound']
-        else:
-            game_state['player_velocity'] = 0
-
-        if game_state['game_round'] > 2:
-            game_state['player_acceleration'] = game_state['player_velocity'] - game_state['prev_player_velocity']
-        else:
-            game_state['player_acceleration'] = 0
 
         log_game_state("Player Won - Waiting for Blast")
         return jsonify({'waiting_for_blast': True})
