@@ -11,17 +11,19 @@ bot_model = joblib.load('bot_model.pkl')
 game_state = {
     'game_round': 0,
     'player_last_sound': 0,
-    'player_velocity': 0,
-    'player_acceleration': 0,
+    'player_velocity': None,
+    'player_acceleration': None,
     'bob_last_sound': 0,
-    'bob_velocity': 0,
-    'bob_acceleration': 0,
+    'bob_velocity': None,
+    'bob_acceleration': None,
     'bob_win_streak': 0,
     'bob_loss_streak': 0,
-    'prev_player_last_sound': 0,
-    'prev_player_velocity': 0,
-    'prev_bob_last_sound': 0,
-    'prev_bob_velocity': 0,
+    'prev_player_last_sound': None,
+    'prev_player_velocity': None,
+    'prev_bob_last_sound': None,
+    'prev_bob_velocity': None,
+    'bob_wins': 0,
+    'player_wins': 0,
 }
 
 
@@ -58,26 +60,17 @@ def prepare_bob_for_decision():
     """Update all relevant stats before Bob makes a decision."""
     global game_state
 
-    # Update Bob's velocity and acceleration only if Bob won the previous round
-    if game_state['bob_win_streak'] > 0:
-        if game_state['game_round'] > 1:
-            game_state['bob_velocity'] = game_state['bob_last_sound'] - game_state['prev_bob_last_sound']
-        else:
-            game_state['bob_velocity'] = 0
-
-        if game_state['game_round'] > 2:
-            game_state['bob_acceleration'] = game_state['bob_velocity'] - game_state['prev_bob_velocity']
-        else:
-            game_state['bob_acceleration'] = 0
-
-        # Update Bob's win/loss streak
-        game_state['bob_loss_streak'] = 0
+    if game_state['bob_win_streak'] >= 2:
+        game_state['bob_velocity'] = game_state['bob_last_sound'] - game_state['prev_bob_last_sound']
     else:
-        # Preserve Bob's stats if he loses
-        game_state['bob_velocity'] = game_state['prev_bob_velocity']
-        game_state['bob_acceleration'] = game_state['bob_acceleration']
+        game_state['bob_velocity'] = None
 
-    log_bob_inputs()  # Log inputs Bob receives for decision-making
+    if game_state['bob_win_streak'] >= 3:
+        game_state['bob_acceleration'] = game_state['bob_velocity'] - game_state['prev_bob_velocity']
+    else:
+        game_state['bob_acceleration'] = None
+
+    log_bob_inputs()
 
 
 @app.route('/')
@@ -99,7 +92,8 @@ def play_round():
     player_won = player_reaction_time < bob_reaction_time
 
     if player_won:
-        # Update Bob's streaks
+        # Update Player's stats
+        game_state['player_wins'] += 1
         game_state['bob_loss_streak'] += 1
         game_state['bob_win_streak'] = 0
 
@@ -107,29 +101,32 @@ def play_round():
         return jsonify({'waiting_for_blast': True})
 
     else:
-        # Prepare Bob's stats before making a decision
+        # Update Bob's stats
+        game_state['bob_wins'] += 1
+        game_state['bob_win_streak'] += 1
+        game_state['bob_loss_streak'] = 0
+
+        # Prepare Bob's inputs
         prepare_bob_for_decision()
 
         # Predict Bob's blast level
         input_data = pd.DataFrame([[
-            game_state['bob_velocity'],
-            game_state['bob_acceleration'],
+            game_state['bob_velocity'] or 0,
+            game_state['bob_acceleration'] or 0,
             game_state['bob_win_streak'],
             game_state['bob_loss_streak'],
             game_state['player_last_sound'],
-            game_state['player_velocity'],
-            game_state['player_acceleration']
+            game_state['player_velocity'] or 0,
+            game_state['player_acceleration'] or 0
         ]], columns=[
             'velocity', 'acceleration', 'win_streak', 'loss_streak',
             'opponent_last_sound', 'opponent_velocity', 'opponent_acceleration'
         ])
         bob_blast = int(bot_model.predict(input_data)[0])
 
-        # Update Bob’s last sound and stats
+        # Update Bob’s last sound
         game_state['prev_bob_last_sound'] = game_state['bob_last_sound']
         game_state['bob_last_sound'] = bob_blast
-        game_state['bob_win_streak'] += 1  # Increment win streak
-        game_state['bob_loss_streak'] = 0  # Reset loss streak
 
         log_game_state("Bob's Turn")
         return jsonify({'waiting_for_blast': False, 'bob_blast': bob_blast})
@@ -144,12 +141,15 @@ def set_player_blast():
     game_state['prev_player_last_sound'] = game_state['player_last_sound']
     game_state['player_last_sound'] = player_blast
 
-    # Only update player velocity and acceleration if the player actually selects a new blast
-    if game_state['game_round'] > 1:
+    if game_state['player_wins'] >= 2:
         game_state['player_velocity'] = game_state['player_last_sound'] - game_state['prev_player_last_sound']
+    else:
+        game_state['player_velocity'] = None
 
-    if game_state['game_round'] > 2:
+    if game_state['player_wins'] >= 3:
         game_state['player_acceleration'] = game_state['player_velocity'] - game_state['prev_player_velocity']
+    else:
+        game_state['player_acceleration'] = None
 
     game_state['prev_player_velocity'] = game_state['player_velocity']
 
