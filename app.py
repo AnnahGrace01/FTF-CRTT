@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 import random
 import pandas as pd
 
@@ -19,10 +19,15 @@ game_state = {
     'opponent_acceleration': 0
 }
 
-@app.route('/')
-def home():
-    # Serve the main HTML page
-    return render_template('index.html')
+# Logging helper
+def log_game_state(action):
+    print(f"--- {action} ---")
+    print(f"Player's Last Blast: {game_state['opponent_last_sound']}")
+    print(f"Velocity: {game_state['velocity']}")
+    print(f"Acceleration: {game_state['acceleration']}")
+    print(f"Win Streak: {game_state['win_streak']}")
+    print(f"Loss Streak: {game_state['loss_streak']}")
+    print("-------------------")
 
 @app.route('/play_round', methods=['POST'])
 def play_round():
@@ -59,9 +64,10 @@ def play_round():
         bob_blast = bot_decision(input_data)
         game_state['opponent_last_sound'] = bob_blast
 
+        log_game_state("Bob's Turn")
         return jsonify({'waiting_for_blast': False, 'bob_blast': bob_blast})
 
-    # If player won, wait for blast input
+    log_game_state("Player Won - Waiting for Blast")
     return jsonify({'waiting_for_blast': True})
 
 @app.route('/set_player_blast', methods=['POST'])
@@ -86,6 +92,7 @@ def set_player_blast():
     game_state['opponent_velocity'] = game_state['velocity']
     game_state['opponent_acceleration'] = game_state['acceleration']
 
+    log_game_state("Player Selected Blast")
     return '', 204
 
 if __name__ == '__main__':
