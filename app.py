@@ -21,7 +21,7 @@ game_state = {
     'prev_player_last_sound': 0,
     'prev_player_velocity': 0,
     'prev_bob_last_sound': 0,
-    'prev_bob_velocity': 0
+    'prev_bob_velocity': 0,
 }
 
 
@@ -75,23 +75,6 @@ def prepare_bob_for_decision():
     elif game_state['bob_loss_streak'] > 0:
         game_state['bob_win_streak'] = 0
 
-    # Update player's velocity and acceleration
-    if game_state['game_round'] > 1:
-        game_state['player_velocity'] = game_state['player_last_sound'] - game_state['prev_player_last_sound']
-    else:
-        game_state['player_velocity'] = 0
-
-    if game_state['game_round'] > 2:
-        game_state['player_acceleration'] = game_state['player_velocity'] - game_state['prev_player_velocity']
-    else:
-        game_state['player_acceleration'] = 0
-
-    # Update historical data for the next round
-    game_state['prev_bob_last_sound'] = game_state['bob_last_sound']
-    game_state['prev_bob_velocity'] = game_state['bob_velocity']
-    game_state['prev_player_last_sound'] = game_state['player_last_sound']
-    game_state['prev_player_velocity'] = game_state['player_velocity']
-
     log_bob_inputs()  # Log inputs Bob receives for decision-making
 
 
@@ -143,6 +126,8 @@ def play_round():
         # Update Bob’s last sound and stats
         game_state['prev_bob_last_sound'] = game_state['bob_last_sound']
         game_state['bob_last_sound'] = bob_blast
+        game_state['bob_win_streak'] += 1  # Increment win streak
+        game_state['bob_loss_streak'] = 0  # Reset loss streak
 
         log_game_state("Bob's Turn")
         return jsonify({'waiting_for_blast': False, 'bob_blast': bob_blast})
@@ -153,9 +138,18 @@ def set_player_blast():
     global game_state
 
     data = request.json
-    player_blast = int(data.get('player_blast', 0))
+    player_blast = int(data.get('player_blast', game_state['player_last_sound']))  # Use last value if no blast is set
     game_state['prev_player_last_sound'] = game_state['player_last_sound']
     game_state['player_last_sound'] = player_blast
+
+    # Only update player velocity and acceleration if the player actually selects a new blast
+    if game_state['game_round'] > 1:
+        game_state['player_velocity'] = game_state['player_last_sound'] - game_state['prev_player_last_sound']
+
+    if game_state['game_round'] > 2:
+        game_state['player_acceleration'] = game_state['player_velocity'] - game_state['prev_player_velocity']
+
+    game_state['prev_player_velocity'] = game_state['player_velocity']
 
     log_game_state("Player Selected Blast")
     return ('', 204)
