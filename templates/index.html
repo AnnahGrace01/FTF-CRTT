@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reaction Time Game</title>
+    <!-- Bootstrap Darkly Theme -->
+    <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.0/dist/darkly/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
             display: flex;
@@ -11,9 +13,19 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            font-family: Arial, sans-serif;
-            text-align: center;
             margin: 0;
+            text-align: center;
+        }
+
+        .title-bar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: #343a40; /* Darkly header color */
+            color: white;
+            padding: 10px;
+            font-size: 24px;
+            z-index: 1000;
         }
 
         #react-button {
@@ -22,9 +34,9 @@
             font-size: 20px;
         }
 
-        .red {
-            background-color: red;
-            color: white;
+        .go-text {
+            color: #ff5733; /* Highlighted color for "Go" */
+            font-weight: bold;
         }
 
         #blast-buttons {
@@ -40,32 +52,50 @@
 
         #next-round-button {
             display: none;
+            margin-top: 20px;
+        }
+
+        #selection-info {
+            font-size: 20px;
+            margin-top: 10px;
+        }
+
+        .content {
+            margin-top: 70px; /* Adjust for the fixed title bar */
         }
     </style>
 </head>
 <body>
-    <div id="instructions">
+    <!-- Title Bar -->
+    <div class="title-bar">
+        Reaction Time Game
+    </div>
+
+    <!-- Main Content -->
+    <div id="instructions" class="content">
         <h1>Welcome to the Reaction Time Game!</h1>
         <p>
             Press the "Start" button to begin. When the screen says "Go", press the "React" button (or spacebar) as quickly as possible. 
             If you win, select a blast level for Bob and proceed to the next round. Good luck!
         </p>
-        <button id="start-button">Start</button>
+        <button id="start-button" class="btn btn-primary">Start</button>
     </div>
-    <div id="game" style="display:none;">
-        <div id="message">Get Ready!</div>
-        <button id="react-button">React</button>
+
+    <div id="game" class="content" style="display:none;">
+        <div id="message" class="fs-3">Get Ready!</div>
+        <p id="selection-info"></p>
+        <button id="react-button" class="btn btn-danger">React</button>
         <div id="blast-buttons">
-            <button class="blast-button" onclick="selectBlast(1)">1</button>
-            <button class="blast-button" onclick="selectBlast(2)">2</button>
-            <button class="blast-button" onclick="selectBlast(3)">3</button>
-            <button class="blast-button" onclick="selectBlast(4)">4</button>
-            <button class="blast-button" onclick="selectBlast(5)">5</button>
-            <button class="blast-button" onclick="selectBlast(6)">6</button>
-            <button class="blast-button" onclick="selectBlast(7)">7</button>
-            <button class="blast-button" onclick="selectBlast(8)">8</button>
+            <button class="btn btn-secondary blast-button" onclick="selectBlast(1)">1</button>
+            <button class="btn btn-secondary blast-button" onclick="selectBlast(2)">2</button>
+            <button class="btn btn-secondary blast-button" onclick="selectBlast(3)">3</button>
+            <button class="btn btn-secondary blast-button" onclick="selectBlast(4)">4</button>
+            <button class="btn btn-secondary blast-button" onclick="selectBlast(5)">5</button>
+            <button class="btn btn-secondary blast-button" onclick="selectBlast(6)">6</button>
+            <button class="btn btn-secondary blast-button" onclick="selectBlast(7)">7</button>
+            <button class="btn btn-secondary blast-button" onclick="selectBlast(8)">8</button>
         </div>
-        <button id="next-round-button">Next Round</button>
+        <button id="next-round-button" class="btn btn-primary">Next Round</button>
     </div>
 
     <script>
@@ -83,6 +113,7 @@
                 body: JSON.stringify({ player_blast: blast })
             }).then(() => {
                 document.getElementById("blast-buttons").style.display = 'none';
+                document.getElementById("selection-info").innerText = `You selected: ${blast}`;
                 document.getElementById("next-round-button").style.display = 'block';
             });
         }
@@ -123,7 +154,7 @@
                 const goDelay = Math.random() * 4000;
                 setTimeout(() => {
                     updateMessage("Go!");
-                    document.getElementById('react-button').classList.add('red');
+                    document.getElementById('react-button').classList.add('go-text');
                     startTime = performance.now();
                     gameInProgress = true;
                 }, goDelay);
@@ -132,6 +163,7 @@
 
         document.getElementById('next-round-button').addEventListener('click', () => {
             document.getElementById("next-round-button").style.display = "none";
+            document.getElementById("selection-info").innerText = "";
             startRound();
         });
 
