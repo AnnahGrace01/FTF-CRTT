@@ -1,22 +1,17 @@
 from flask import Flask, request, jsonify, render_template
-import random
 import pandas as pd
-import pickle
+import joblib
 
-app = Flask(__name__, static_folder='static', template_folder='templates')
+app = Flask(__name__)
 
-# Load the real model from the pickle file
-with open('bot_model.pkl', 'rb') as model_file:
-    bot_model = pickle.load(model_file)
+# Load the trained bot model
+bot_model = joblib.load('bot_model.pkl')
 
 # Game state
 game_state = {
     'velocity': 0,
     'acceleration': 0,
-    'win_streak': 0,
-    'loss_streak': 0,
-    'last_win_streak': 0,
-    'last_loss_streak': 0,
+    'win_loss_streak': 0,  # Positive for win streak, negative for loss streak
     'opponent_last_sound': 0,
     'opponent_velocity': 0,
     'opponent_acceleration': 0
@@ -28,15 +23,9 @@ def log_game_state(action):
     print(f"Player's Last Blast: {game_state['opponent_last_sound']}")
     print(f"Velocity: {game_state['velocity']}")
     print(f"Acceleration: {game_state['acceleration']}")
-    print(f"Win Streak: {game_state['win_streak']}, Last Win Streak: {game_state['last_win_streak']}")
-    print(f"Loss Streak: {game_state['loss_streak']}, Last Loss Streak: {game_state['last_loss_streak']}")
+    print(f"Win/Loss Streak: {game_state['win_loss_streak']}")
     print("-------------------")
 
-# Predict Bob's blast level using the real model
-def bot_decision(input_data):
-    return bot_model.predict(input_data)[0]
-
-# Root route to serve the game
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -51,34 +40,27 @@ def play_round():
 
     player_won = player_reaction_time < bob_reaction_time
 
-    # Update game state for win/loss streaks
+    # Update game state
     if player_won:
-        game_state['win_streak'] += 1
-        if game_state['loss_streak'] > 0:
-            game_state['last_loss_streak'] = game_state['loss_streak']
-        game_state['loss_streak'] = 0  # Reset loss streak when the player wins
+        game_state['win_loss_streak'] = max(1, game_state['win_loss_streak'] + 1)  # Increment positive streak
     else:
-        game_state['loss_streak'] += 1
-        if game_state['win_streak'] > 0:
-            game_state['last_win_streak'] = game_state['win_streak']
-        game_state['win_streak'] = 0  # Reset win streak when the player loses
+        game_state['win_loss_streak'] = min(-1, game_state['win_loss_streak'] - 1)  # Increment negative streak
 
-    # Bob's turn if player loses
     if not player_won:
+        # Bob decides blast level
         input_data = pd.DataFrame([[
             game_state['velocity'],
             game_state['acceleration'],
-            game_state['last_win_streak'] if game_state['win_streak'] == 0 else game_state['win_streak'],
-            game_state['last_loss_streak'] if game_state['loss_streak'] == 0 else game_state['loss_streak'],
+            abs(game_state['win_loss_streak']),  # Pass streak as absolute value
             game_state['opponent_last_sound'],
             game_state['opponent_velocity'],
             game_state['opponent_acceleration']
         ]], columns=[
-            'velocity', 'acceleration', 'win_streak', 'loss_streak',
+            'velocity', 'acceleration', 'win_loss_streak',
             'opponent_last_sound', 'opponent_velocity', 'opponent_acceleration'
         ])
-        bob_blast = bot_decision(input_data)
-        game_state['opponent_last_sound'] = bob_blast  # Update Bob's blast as the last sound
+        bob_blast = int(bot_model.predict(input_data)[0])
+        game_state['opponent_last_sound'] = bob_blast
 
         log_game_state("Bob's Turn")
         return jsonify({'waiting_for_blast': False, 'bob_blast': bob_blast})
@@ -94,19 +76,19 @@ def set_player_blast():
     player_blast = data.get('player_blast', 0)
 
     # Update player stats
-    if game_state['win_streak'] >= 2:
+    if game_state['win_loss_streak'] >= 2:
         game_state['velocity'] = player_blast - game_state['opponent_last_sound']
     else:
         game_state['velocity'] = 0
 
-    if game_state['win_streak'] >= 3:
+    if game_state['win_loss_streak'] >= 3:
         game_state['acceleration'] = game_state['velocity'] - game_state['opponent_velocity']
     else:
         game_state['acceleration'] = 0
 
-    game_state['opponent_last_sound'] = player_blast  # Update last blast
-    game_state['opponent_velocity'] = game_state['velocity']  # Update velocity
-    game_state['opponent_acceleration'] = game_state['acceleration']  # Update acceleration
+    game_state['opponent_last_sound'] = player_blast
+    game_state['opponent_velocity'] = game_state['velocity']
+    game_state['opponent_acceleration'] = game_state['acceleration']
 
     log_game_state("Player Selected Blast")
     return '', 204
