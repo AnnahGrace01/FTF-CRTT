@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 import random
 import pandas as pd
 
@@ -14,6 +14,8 @@ game_state = {
     'acceleration': 0,
     'win_streak': 0,
     'loss_streak': 0,
+    'last_win_streak': 0,
+    'last_loss_streak': 0,
     'opponent_last_sound': 0,
     'opponent_velocity': 0,
     'opponent_acceleration': 0
@@ -25,14 +27,9 @@ def log_game_state(action):
     print(f"Player's Last Blast: {game_state['opponent_last_sound']}")
     print(f"Velocity: {game_state['velocity']}")
     print(f"Acceleration: {game_state['acceleration']}")
-    print(f"Win Streak: {game_state['win_streak']}")
-    print(f"Loss Streak: {game_state['loss_streak']}")
+    print(f"Win Streak: {game_state['win_streak']}, Last Win Streak: {game_state['last_win_streak']}")
+    print(f"Loss Streak: {game_state['loss_streak']}, Last Loss Streak: {game_state['last_loss_streak']}")
     print("-------------------")
-
-# Route to serve the main HTML file
-@app.route('/')
-def home():
-    return render_template('index.html')
 
 @app.route('/play_round', methods=['POST'])
 def play_round():
@@ -44,21 +41,25 @@ def play_round():
 
     player_won = player_reaction_time < bob_reaction_time
 
-    # Update game state
+    # Update game state for win/loss streaks
     if player_won:
         game_state['win_streak'] += 1
-        game_state['loss_streak'] = 0
+        if game_state['loss_streak'] > 0:
+            game_state['last_loss_streak'] = game_state['loss_streak']
+        game_state['loss_streak'] = 0  # Reset loss streak when the player wins
     else:
-        game_state['win_streak'] = 0
         game_state['loss_streak'] += 1
+        if game_state['win_streak'] > 0:
+            game_state['last_win_streak'] = game_state['win_streak']
+        game_state['win_streak'] = 0  # Reset win streak when the player loses
 
+    # Bob's turn if player loses
     if not player_won:
-        # Bob decides blast level
         input_data = pd.DataFrame([[
             game_state['velocity'],
             game_state['acceleration'],
-            game_state['win_streak'],
-            game_state['loss_streak'],
+            game_state['last_win_streak'] if game_state['win_streak'] == 0 else game_state['win_streak'],
+            game_state['last_loss_streak'] if game_state['loss_streak'] == 0 else game_state['loss_streak'],
             game_state['opponent_last_sound'],
             game_state['opponent_velocity'],
             game_state['opponent_acceleration']
@@ -67,7 +68,7 @@ def play_round():
             'opponent_last_sound', 'opponent_velocity', 'opponent_acceleration'
         ])
         bob_blast = bot_decision(input_data)
-        game_state['opponent_last_sound'] = bob_blast
+        game_state['opponent_last_sound'] = bob_blast  # Update Bob's blast as the last sound
 
         log_game_state("Bob's Turn")
         return jsonify({'waiting_for_blast': False, 'bob_blast': bob_blast})
@@ -93,9 +94,9 @@ def set_player_blast():
     else:
         game_state['acceleration'] = 0
 
-    game_state['opponent_last_sound'] = player_blast
-    game_state['opponent_velocity'] = game_state['velocity']
-    game_state['opponent_acceleration'] = game_state['acceleration']
+    game_state['opponent_last_sound'] = player_blast  # Update last blast
+    game_state['opponent_velocity'] = game_state['velocity']  # Update velocity
+    game_state['opponent_acceleration'] = game_state['acceleration']  # Update acceleration
 
     log_game_state("Player Selected Blast")
     return '', 204
