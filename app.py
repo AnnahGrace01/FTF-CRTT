@@ -12,10 +12,14 @@ def reset_game_state():
     return {
         'game_round': 0,
         'player_last_sound': 0,
+        'prev_player_last_sound': 0,
         'player_velocity': 0,
+        'prev_player_velocity': 0,
         'player_acceleration': 0,
         'bob_last_sound': 0,
+        'prev_bob_last_sound': 0,
         'bob_velocity': 0,
+        'prev_bob_velocity': 0,
         'bob_acceleration': 0,
         'bob_win_streak': 0,
         'bob_loss_streak': 0,
@@ -56,27 +60,24 @@ def play_round():
     player_won = player_reaction_time < bob_reaction_time
 
     if player_won:
-        # Update Player’s last sound, velocity, and acceleration
-        if game_state['game_round'] > 1:
-            game_state['player_velocity'] = game_state['player_last_sound'] - data.get('last_player_blast', 0)
-        if game_state['game_round'] > 2:
-            game_state['player_acceleration'] = game_state['player_velocity'] - game_state.get('prev_player_velocity', 0)
+        # Update Player’s velocity and acceleration
+        game_state['player_velocity'] = game_state['player_last_sound'] - game_state['prev_player_last_sound']
+        game_state['player_acceleration'] = game_state['player_velocity'] - game_state['prev_player_velocity']
 
+        # Update streaks
         game_state['bob_loss_streak'] += 1
         game_state['bob_win_streak'] = 0
 
         log_game_state("Player Won - Waiting for Blast")
         return jsonify({'waiting_for_blast': True})
     else:
-        # Update Bob streaks
+        # Update Bob’s velocity and acceleration
+        game_state['bob_velocity'] = game_state['bob_last_sound'] - game_state['prev_bob_last_sound']
+        game_state['bob_acceleration'] = game_state['bob_velocity'] - game_state['prev_bob_velocity']
+
+        # Update streaks
         game_state['bob_win_streak'] += 1
         game_state['bob_loss_streak'] = 0
-
-        # Calculate Bob’s velocity and acceleration
-        if game_state['game_round'] > 1:
-            game_state['bob_velocity'] = game_state['bob_last_sound'] - game_state.get('prev_bob_last_sound', 0)
-        if game_state['game_round'] > 2:
-            game_state['bob_acceleration'] = game_state['bob_velocity'] - game_state.get('prev_bob_velocity', 0)
 
         # Predict Bob's blast level
         input_data = pd.DataFrame([[
@@ -107,8 +108,9 @@ def set_player_blast():
     data = request.json
     player_blast = data.get('player_blast', 0)
 
-    # Update Player’s last sound and previous velocity
+    # Update Player’s last sound and velocity
     game_state['prev_player_velocity'] = game_state['player_velocity']
+    game_state['prev_player_last_sound'] = game_state['player_last_sound']
     game_state['player_last_sound'] = player_blast
 
     log_game_state("Player Selected Blast")
