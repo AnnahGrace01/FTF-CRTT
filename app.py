@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import random
 import pandas as pd
 
@@ -28,6 +28,11 @@ def log_game_state(action):
     print(f"Win Streak: {game_state['win_streak']}")
     print(f"Loss Streak: {game_state['loss_streak']}")
     print("-------------------")
+
+# Route to serve the main HTML file
+@app.route('/')
+def home():
+    return render_template('index.html')
 
 @app.route('/play_round', methods=['POST'])
 def play_round():
