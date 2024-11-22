@@ -57,26 +57,37 @@ def log_bob_inputs():
 
 
 def prepare_bob_for_decision():
-    """Update all relevant stats before Bob makes a decision."""
+    """Prepare all relevant stats before Bob makes a decision."""
     global game_state
 
-    # Update Bob's velocity only if Bob has at least 2 blasts
-    if game_state['bob_win_streak'] >= 2 and game_state['prev_bob_last_sound'] is not None:
+    # Ensure Bob's velocity and acceleration are updated correctly after a win
+    if game_state['bob_win_streak'] >= 2:
+        # Bob's velocity: change in sound from the previous to the current round
         game_state['bob_velocity'] = game_state['bob_last_sound'] - game_state['prev_bob_last_sound']
     else:
         game_state['bob_velocity'] = None
 
-    # Update Bob's acceleration only if Bob has at least 3 blasts
-    if game_state['bob_win_streak'] >= 3 and game_state['prev_bob_velocity'] is not None:
+    if game_state['bob_win_streak'] >= 3:
+        # Bob's acceleration: change in velocity from the previous to the current round
         game_state['bob_acceleration'] = game_state['bob_velocity'] - game_state['prev_bob_velocity']
     else:
         game_state['bob_acceleration'] = None
 
-    # Ensure Bob's velocity and acceleration are carried over correctly
+    # Update the "previous" values for the next round
     game_state['prev_bob_last_sound'] = game_state['bob_last_sound']
     game_state['prev_bob_velocity'] = game_state['bob_velocity']
 
-    log_bob_inputs()
+    # Log Bob's decision inputs
+    print(f"Bob's Decision Inputs:")
+    print(f"Player Last Sound: {game_state['player_last_sound']}")
+    print(f"Player Velocity: {game_state['player_velocity']}")
+    print(f"Player Acceleration: {game_state['player_acceleration']}")
+    print(f"Bob Last Sound: {game_state['bob_last_sound']}")
+    print(f"Bob Velocity: {game_state['bob_velocity']}")
+    print(f"Bob Acceleration: {game_state['bob_acceleration']}")
+    print(f"Bob Win Streak: {game_state['bob_win_streak']}")
+    print(f"Bob Loss Streak: {game_state['bob_loss_streak']}")
+    print("-------------------")
 
 
 @app.route('/')
