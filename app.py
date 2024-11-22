@@ -79,7 +79,7 @@ def play_round():
         return jsonify({'waiting_for_blast': True})
 
     else:
-        # Prepare Bob's stats before his decision
+        # Call prepare_bob_for_decision explicitly before making a decision
         prepare_bob_for_decision()
 
         # Predict Bob's blast level
