@@ -61,8 +61,15 @@ def play_round():
 
     if player_won:
         # Update Player’s velocity and acceleration
-        game_state['player_velocity'] = game_state['player_last_sound'] - game_state['prev_player_last_sound']
-        game_state['player_acceleration'] = game_state['player_velocity'] - game_state['prev_player_velocity']
+        if game_state['game_round'] > 1:
+            game_state['player_velocity'] = game_state['player_last_sound'] - game_state['prev_player_last_sound']
+        else:
+            game_state['player_velocity'] = 0
+
+        if game_state['game_round'] > 2:
+            game_state['player_acceleration'] = game_state['player_velocity'] - game_state['prev_player_velocity']
+        else:
+            game_state['player_acceleration'] = 0
 
         # Update streaks
         game_state['bob_loss_streak'] += 1
@@ -72,8 +79,15 @@ def play_round():
         return jsonify({'waiting_for_blast': True})
     else:
         # Update Bob’s velocity and acceleration
-        game_state['bob_velocity'] = game_state['bob_last_sound'] - game_state['prev_bob_last_sound']
-        game_state['bob_acceleration'] = game_state['bob_velocity'] - game_state['prev_bob_velocity']
+        if game_state['game_round'] > 1:
+            game_state['bob_velocity'] = game_state['bob_last_sound'] - game_state['prev_bob_last_sound']
+        else:
+            game_state['bob_velocity'] = 0
+
+        if game_state['game_round'] > 2:
+            game_state['bob_acceleration'] = game_state['bob_velocity'] - game_state['prev_bob_velocity']
+        else:
+            game_state['bob_acceleration'] = 0
 
         # Update streaks
         game_state['bob_win_streak'] += 1
