@@ -1,103 +1,51 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session
 import pandas as pd
 import joblib
+import uuid
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key_here'  # Replace with a secure random key
 
 # Load the pre-trained bot model
 bot_model = joblib.load('bot_model.pkl')
 
-# Initialize game state
-game_state = {
-    'game_round': 0,
-    'player_last_sound': None,
-    'player_velocity': None,
-    'player_acceleration': None,
-    'bob_last_sound': None,
-    'bob_velocity': None,
-    'bob_acceleration': None,
-    'bob_win_streak': 0,
-    'bob_loss_streak': 0,
-    'prev_player_last_sound': None,
-    'prev_player_velocity': None,
-    'prev_bob_last_sound': None,
-    'prev_bob_velocity': None,
-    'bob_wins': 0,
-    'player_wins': 0,
-}
+def initialize_game_state():
+    """Initialize a new game state."""
+    return {
+        'game_round': 0,
+        'player_last_sound': None,
+        'player_velocity': None,
+        'player_acceleration': None,
+        'bob_last_sound': None,
+        'bob_velocity': None,
+        'bob_acceleration': None,
+        'bob_win_streak': 0,
+        'bob_loss_streak': 0,
+        'prev_player_last_sound': None,
+        'prev_player_velocity': None,
+        'prev_bob_last_sound': None,
+        'prev_bob_velocity': None,
+        'bob_wins': 0,
+        'player_wins': 0,
+    }
 
+def get_game_state():
+    """Retrieve or initialize the game state for the current session."""
+    if 'game_state' not in session:
+        session['game_state'] = initialize_game_state()
+    return session['game_state']
 
-def log_game_state(message):
-    """Logs the current state of the game."""
-    print(message)
-    print(f"Round: {game_state['game_round']}")
-    print(f"Player's Last Sound: {game_state['player_last_sound']}")
-    print(f"Player Velocity: {game_state['player_velocity']}")
-    print(f"Player Acceleration: {game_state['player_acceleration']}")
-    print(f"Bob Last Sound: {game_state['bob_last_sound']}")
-    print(f"Bob Velocity: {game_state['bob_velocity']}")
-    print(f"Bob Acceleration: {game_state['bob_acceleration']}")
-    print(f"Bob Win Streak: {game_state['bob_win_streak']}")
-    print(f"Bob Loss Streak: {game_state['bob_loss_streak']}")
-    print("-------------------")
-
-
-def log_bob_inputs():
-    """Logs the inputs Bob receives for making a decision."""
-    print("Bob's Decision Inputs:")
-    print(f"Player Last Sound: {game_state['player_last_sound']}")
-    print(f"Player Velocity: {game_state['player_velocity']}")
-    print(f"Player Acceleration: {game_state['player_acceleration']}")
-    print(f"Bob Last Sound: {game_state['bob_last_sound']}")
-    print(f"Bob Velocity: {game_state['bob_velocity']}")
-    print(f"Bob Acceleration: {game_state['bob_acceleration']}")
-    print(f"Bob Win Streak: {game_state['bob_win_streak']}")
-    print(f"Bob Loss Streak: {game_state['bob_loss_streak']}")
-    print("-------------------")
-
-
-def prepare_bob_for_decision():
-    """Prepare all relevant stats before Bob makes a decision."""
-    global game_state
-
-    # Ensure Bob's velocity and acceleration are updated correctly after a win
-    if game_state['bob_win_streak'] >= 2:
-        # Bob's velocity: change in sound from the previous to the current round
-        game_state['bob_velocity'] = game_state['bob_last_sound'] - game_state['prev_bob_last_sound']
-    else:
-        game_state['bob_velocity'] = None
-
-    if game_state['bob_win_streak'] >= 3:
-        # Bob's acceleration: change in velocity from the previous to the current round
-        game_state['bob_acceleration'] = game_state['bob_velocity'] - game_state['prev_bob_velocity']
-    else:
-        game_state['bob_acceleration'] = None
-
-    # Update the "previous" values for the next round
-    game_state['prev_bob_last_sound'] = game_state['bob_last_sound']
-    game_state['prev_bob_velocity'] = game_state['bob_velocity']
-
-    # Log Bob's decision inputs
-    print(f"Bob's Decision Inputs:")
-    print(f"Player Last Sound: {game_state['player_last_sound']}")
-    print(f"Player Velocity: {game_state['player_velocity']}")
-    print(f"Player Acceleration: {game_state['player_acceleration']}")
-    print(f"Bob Last Sound: {game_state['bob_last_sound']}")
-    print(f"Bob Velocity: {game_state['bob_velocity']}")
-    print(f"Bob Acceleration: {game_state['bob_acceleration']}")
-    print(f"Bob Win Streak: {game_state['bob_win_streak']}")
-    print(f"Bob Loss Streak: {game_state['bob_loss_streak']}")
-    print("-------------------")
-
+def save_game_state(state):
+    """Save the updated game state to the session."""
+    session['game_state'] = state
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-
 @app.route('/play_round', methods=['POST'])
 def play_round():
-    global game_state
+    game_state = get_game_state()
 
     data = request.json
     player_reaction_time = data.get('reaction_time', float('inf'))  # Default to inf if not provided
@@ -114,7 +62,7 @@ def play_round():
         game_state['bob_loss_streak'] += 1
         game_state['bob_win_streak'] = 0
 
-        log_game_state("Player Won - Waiting for Blast")
+        save_game_state(game_state)
         return jsonify({'waiting_for_blast': True})
 
     else:
@@ -124,7 +72,18 @@ def play_round():
         game_state['bob_loss_streak'] = 0
 
         # Prepare Bob's inputs
-        prepare_bob_for_decision()
+        if game_state['bob_win_streak'] >= 2:
+            game_state['bob_velocity'] = game_state['bob_last_sound'] - (game_state['prev_bob_last_sound'] or 0)
+        else:
+            game_state['bob_velocity'] = None
+
+        if game_state['bob_win_streak'] >= 3:
+            game_state['bob_acceleration'] = game_state['bob_velocity'] - (game_state['prev_bob_velocity'] or 0)
+        else:
+            game_state['bob_acceleration'] = None
+
+        game_state['prev_bob_last_sound'] = game_state['bob_last_sound']
+        game_state['prev_bob_velocity'] = game_state['bob_velocity']
 
         # Predict Bob's blast level
         input_data = pd.DataFrame([[
@@ -145,13 +104,12 @@ def play_round():
         game_state['prev_bob_last_sound'] = game_state['bob_last_sound']
         game_state['bob_last_sound'] = bob_blast
 
-        log_game_state("Bob's Turn")
+        save_game_state(game_state)
         return jsonify({'waiting_for_blast': False, 'bob_blast': bob_blast})
-
 
 @app.route('/set_player_blast', methods=['POST'])
 def set_player_blast():
-    global game_state
+    game_state = get_game_state()
 
     data = request.json
     player_blast = int(data.get('player_blast', game_state['player_last_sound'] or 0))
@@ -170,9 +128,8 @@ def set_player_blast():
 
     game_state['prev_player_velocity'] = game_state['player_velocity']
 
-    log_game_state("Player Selected Blast")
+    save_game_state(game_state)
     return ('', 204)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
