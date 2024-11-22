@@ -58,22 +58,24 @@ def prepare_bob_for_decision():
     """Update all relevant stats before Bob makes a decision."""
     global game_state
 
-    # Update Bob's velocity and acceleration
-    if game_state['game_round'] > 1:
-        game_state['bob_velocity'] = game_state['bob_last_sound'] - game_state['prev_bob_last_sound']
-    else:
-        game_state['bob_velocity'] = 0
-
-    if game_state['game_round'] > 2:
-        game_state['bob_acceleration'] = game_state['bob_velocity'] - game_state['prev_bob_velocity']
-    else:
-        game_state['bob_acceleration'] = 0
-
-    # Update Bob's win/loss streak
+    # Update Bob's velocity and acceleration only if Bob won the previous round
     if game_state['bob_win_streak'] > 0:
+        if game_state['game_round'] > 1:
+            game_state['bob_velocity'] = game_state['bob_last_sound'] - game_state['prev_bob_last_sound']
+        else:
+            game_state['bob_velocity'] = 0
+
+        if game_state['game_round'] > 2:
+            game_state['bob_acceleration'] = game_state['bob_velocity'] - game_state['prev_bob_velocity']
+        else:
+            game_state['bob_acceleration'] = 0
+
+        # Update Bob's win/loss streak
         game_state['bob_loss_streak'] = 0
-    elif game_state['bob_loss_streak'] > 0:
-        game_state['bob_win_streak'] = 0
+    else:
+        # Preserve Bob's stats if he loses
+        game_state['bob_velocity'] = game_state['prev_bob_velocity']
+        game_state['bob_acceleration'] = game_state['bob_acceleration']
 
     log_bob_inputs()  # Log inputs Bob receives for decision-making
 
