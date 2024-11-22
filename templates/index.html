@@ -71,34 +71,28 @@
     <script>
         let startTime = 0;
         let gameInProgress = false;
-        let waitingForBlast = false;
 
-        // Update the message displayed to the player
         function updateMessage(msg) {
             document.getElementById("message").innerText = msg;
         }
 
-        // Select a blast level
         function selectBlast(blast) {
             fetch('/set_player_blast', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ player_blast: blast })
             }).then(() => {
-                waitingForBlast = false;
                 document.getElementById("blast-buttons").style.display = 'none';
                 document.getElementById("next-round-button").style.display = 'block';
             });
         }
 
-        // Start the game
         document.getElementById('start-button').addEventListener('click', () => {
             document.getElementById('instructions').style.display = 'none';
             document.getElementById('game').style.display = 'block';
             startRound();
         });
 
-        // Handle the reaction
         function handleReaction() {
             if (!gameInProgress) return;
 
@@ -122,12 +116,11 @@
             });
         }
 
-        // Start a new round
         function startRound() {
             updateMessage("Get Ready!");
             setTimeout(() => {
                 updateMessage("Set...");
-                const goDelay = Math.random() * 4000; // Random delay between 0-4 seconds
+                const goDelay = Math.random() * 4000;
                 setTimeout(() => {
                     updateMessage("Go!");
                     document.getElementById('react-button').classList.add('red');
@@ -137,16 +130,13 @@
             }, 1000);
         }
 
-        // Next round button
         document.getElementById('next-round-button').addEventListener('click', () => {
             document.getElementById("next-round-button").style.display = "none";
             startRound();
         });
 
-        // Reaction button
         document.getElementById('react-button').addEventListener('click', handleReaction);
 
-        // Allow spacebar to trigger reaction
         document.addEventListener('keydown', (event) => {
             if (event.code === 'Space') {
                 handleReaction();
