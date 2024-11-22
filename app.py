@@ -52,12 +52,34 @@ def play_round():
         game_state['bob_loss_streak'] += 1
         game_state['bob_last_win_streak'] = game_state['bob_win_streak']
         game_state['bob_win_streak'] = 0
+
+        # Update player stats
+        if game_state['player_win_history']:
+            last_two = game_state['player_win_history'][-2:]
+            if len(last_two) == 2:
+                game_state['player_velocity'] = last_two[1] - last_two[0]
+            else:
+                game_state['player_velocity'] = 0
+            if len(game_state['player_win_history']) >= 3:
+                game_state['player_acceleration'] = (
+                    game_state['player_velocity']
+                    - (last_two[0] - game_state['player_win_history'][-3])
+                )
+            else:
+                game_state['player_acceleration'] = 0
+        else:
+            game_state['player_velocity'] = 0
+            game_state['player_acceleration'] = 0
+
+        log_game_state("Player Won - Waiting for Blast")
+        return jsonify({'waiting_for_blast': True})
     else:
+        # Bob's turn
         game_state['bob_win_streak'] += 1
         game_state['bob_last_loss_streak'] = game_state['bob_loss_streak']
         game_state['bob_loss_streak'] = 0
 
-        # Update Bob's blast logic
+        # Update Bob's stats
         input_data = pd.DataFrame([[
             game_state['bob_velocity'],
             game_state['bob_acceleration'],
@@ -72,5 +94,35 @@ def play_round():
         ])
         bob_blast = int(bot_model.predict(input_data)[0])
         game_state['bob_velocity'] = bob_blast - game_state['player_last_sound']
-        game_state['bob_acceleration'] = game_state['bob_velocity'] - game_state['bob_velocity']
+        if game_state['bob_win_streak'] > 1:
+            game_state['bob_acceleration'] = (
+                game_state['bob_velocity'] - game_state['bob_velocity']
+            )
+        else:
+            game_state['bob_acceleration'] = 0
+
         game_state['player_last_sound'] = bob_blast
+        log_game_state("Bob's Turn")
+        return jsonify({'waiting_for_blast': False, 'bob_blast': bob_blast})
+
+
+@app.route('/set_player_blast', methods=['POST'])
+def set_player_blast():
+    global game_state
+
+    data = request.json
+    player_blast = data.get('player_blast', 0)
+
+    # Add player's blast to win history
+    game_state['player_win_history'].append(player_blast)
+    if len(game_state['player_win_history']) > 3:
+        game_state['player_win_history'] = game_state['player_win_history'][-3:]
+
+    game_state['player_last_sound'] = player_blast
+
+    log_game_state("Player Selected Blast")
+    return '', 204
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
