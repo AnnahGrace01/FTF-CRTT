@@ -27,12 +27,6 @@
             font-size: 24px;
         }
 
-        #react-button {
-            display: none;
-            padding: 10px 20px;
-            font-size: 20px;
-        }
-
         #message {
             font-size: 24px;
             margin-bottom: 20px;
@@ -70,15 +64,14 @@
     <div id="instructions">
         <h1>Welcome to Bob the Bot: CRTT Player Simulator!</h1>
         <p>
-            Press the "Start" button to begin. When the screen says <span class="red">"Go"</span>, press your spacebar. Bob's reaction
-            time is fixed at 500ms. If you want to win, react as fast as you can! The winner will select a blast and then you
-            can proceed to the next round. Note that Bob is a statistical summary of all our players. He behaves like the average player.
+            Press the "Start" button to begin. When the screen says <span class="red">"Go"</span>, press your spacebar. Bob's reaction time is fixed at 500ms. 
+            \nIf you want to win, react as fast as you can! The winner will select a blast and then you can proceed to the next round. 
+            \nNote that Bob is a statistical summary of all our players. He behaves like the average player.
         </p>
         <button id="start-button" class="btn btn-primary">Start</button>
     </div>
     <div id="game" style="display:none;">
         <div id="message">Get Ready!</div>
-        <button id="react-button" class="btn btn-danger">React</button>
         <div id="blast-buttons" class="centered">
             <button class="blast-button btn btn-primary" onclick="selectBlast(1)">1</button>
             <button class="blast-button btn btn-primary" onclick="selectBlast(2)">2</button>
@@ -158,7 +151,6 @@
                 const goDelay = Math.random() * 4000;
                 setTimeout(() => {
                     updateMessage("Go!");
-                    document.getElementById('react-button').style.display = 'block';
                     startTime = performance.now();
                     gameInProgress = true;
                 }, goDelay);
@@ -170,8 +162,6 @@
             document.getElementById("selected-blast").innerText = '';
             startRound();
         });
-
-        document.getElementById('react-button').addEventListener('click', handleReaction);
 
         document.addEventListener('keydown', (event) => {
             if (event.code === 'Space') {
