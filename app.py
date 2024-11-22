@@ -1,11 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import pandas as pd
 import joblib
 
 app = Flask(__name__)
 
 # Load the pre-trained bot model
-bot_model = joblib.load('bot_model.joblib')
+bot_model = joblib.load('bot_model.pkl')
 
 # Initialize game state
 game_state = {
@@ -81,7 +81,7 @@ def prepare_bob_for_decision():
 
 @app.route('/')
 def index():
-    return "<h1>Reaction Time Game</h1>"
+    return render_template('index.html')
 
 
 @app.route('/play_round', methods=['POST'])
