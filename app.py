@@ -79,7 +79,7 @@ def play_round():
         return jsonify({'waiting_for_blast': True})
 
     else:
-        # Update game state to prepare for Bob's decision
+        # Prepare Bob's stats before his decision
         prepare_bob_for_decision()
 
         # Predict Bob's blast level
@@ -97,7 +97,7 @@ def play_round():
         ])
         bob_blast = int(bot_model.predict(input_data)[0])
 
-        # Update Bob’s last sound
+        # Update Bob’s last sound and stats
         game_state['prev_bob_last_sound'] = game_state['bob_last_sound']
         game_state['bob_last_sound'] = bob_blast
 
@@ -107,12 +107,15 @@ def play_round():
 def prepare_bob_for_decision():
     """Update all relevant stats before Bob makes a decision."""
     global game_state
+
     if game_state['game_round'] > 1:
+        # Update Bob's velocity
         game_state['bob_velocity'] = game_state['bob_last_sound'] - game_state['prev_bob_last_sound']
     else:
         game_state['bob_velocity'] = 0
 
     if game_state['game_round'] > 2:
+        # Update Bob's acceleration
         game_state['bob_acceleration'] = game_state['bob_velocity'] - game_state['prev_bob_velocity']
     else:
         game_state['bob_acceleration'] = 0
