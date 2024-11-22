@@ -10,10 +10,10 @@ bot_model = joblib.load('bot_model.pkl')
 # Initialize game state
 game_state = {
     'game_round': 0,
-    'player_last_sound': 0,
+    'player_last_sound': None,
     'player_velocity': None,
     'player_acceleration': None,
-    'bob_last_sound': 0,
+    'bob_last_sound': None,
     'bob_velocity': None,
     'bob_acceleration': None,
     'bob_win_streak': 0,
@@ -60,12 +60,13 @@ def prepare_bob_for_decision():
     """Update all relevant stats before Bob makes a decision."""
     global game_state
 
-    if game_state['bob_win_streak'] >= 2:
+    # Only calculate velocity and acceleration if there are valid previous values
+    if game_state['bob_win_streak'] >= 2 and game_state['prev_bob_last_sound'] is not None:
         game_state['bob_velocity'] = game_state['bob_last_sound'] - game_state['prev_bob_last_sound']
     else:
         game_state['bob_velocity'] = None
 
-    if game_state['bob_win_streak'] >= 3:
+    if game_state['bob_win_streak'] >= 3 and game_state['prev_bob_velocity'] is not None:
         game_state['bob_acceleration'] = game_state['bob_velocity'] - game_state['prev_bob_velocity']
     else:
         game_state['bob_acceleration'] = None
@@ -115,7 +116,7 @@ def play_round():
             game_state['bob_acceleration'] or 0,
             game_state['bob_win_streak'],
             game_state['bob_loss_streak'],
-            game_state['player_last_sound'],
+            game_state['player_last_sound'] or 0,
             game_state['player_velocity'] or 0,
             game_state['player_acceleration'] or 0
         ]], columns=[
@@ -137,16 +138,16 @@ def set_player_blast():
     global game_state
 
     data = request.json
-    player_blast = int(data.get('player_blast', game_state['player_last_sound']))  # Use last value if no blast is set
+    player_blast = int(data.get('player_blast', game_state['player_last_sound'] or 0))
     game_state['prev_player_last_sound'] = game_state['player_last_sound']
     game_state['player_last_sound'] = player_blast
 
-    if game_state['player_wins'] >= 2:
+    if game_state['player_wins'] >= 2 and game_state['prev_player_last_sound'] is not None:
         game_state['player_velocity'] = game_state['player_last_sound'] - game_state['prev_player_last_sound']
     else:
         game_state['player_velocity'] = None
 
-    if game_state['player_wins'] >= 3:
+    if game_state['player_wins'] >= 3 and game_state['prev_player_velocity'] is not None:
         game_state['player_acceleration'] = game_state['player_velocity'] - game_state['prev_player_velocity']
     else:
         game_state['player_acceleration'] = None
