@@ -1,8 +1,8 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, send_from_directory
 import random
 import pandas as pd
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', template_folder='templates')
 
 # Dummy model for Bob's decision (replace with actual model)
 def bot_decision(input_data):
@@ -30,6 +30,10 @@ def log_game_state(action):
     print(f"Win Streak: {game_state['win_streak']}, Last Win Streak: {game_state['last_win_streak']}")
     print(f"Loss Streak: {game_state['loss_streak']}, Last Loss Streak: {game_state['last_loss_streak']}")
     print("-------------------")
+
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 @app.route('/play_round', methods=['POST'])
 def play_round():
